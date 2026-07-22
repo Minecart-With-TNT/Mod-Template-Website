@@ -1,0 +1,67 @@
+.panel {
+  position: sticky;
+  top: 24px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  overflow: hidden;
+  font-family: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+}
+
+.header {
+  font-family: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  background: var(--border);
+  padding: 8px 16px;
+  letter-spacing: 0.02em;
+}
+
+.body {
+  background: var(--code-bg);
+  padding: 20px 24px;
+  overflow-x: auto;
+}
+
+.line {
+  display: flex;
+  align-items: baseline;
+  font-size: 13px;
+  line-height: 1.9;
+  white-space: nowrap;
+}
+
+.blank {
+  height: 0.9em;
+}
+
+.comment {
+  color: var(--prop-comment);
+}
+
+.key {
+  color: var(--prop-key);
+}
+
+.eq {
+  color: var(--prop-comment);
+}
+
+.val {
+  color: var(--prop-val);
+}
+
+.loading {
+  color: var(--text);
+  font-style: italic;
+}
+
+.placeholder {
+  color: var(--border);
+}
+
+.unavail {
+  color: var(--text);
+  opacity: 0.5;
+  font-style: italic;
+}
