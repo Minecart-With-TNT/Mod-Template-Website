@@ -3,8 +3,7 @@ import { createStore } from 'solid-js/store'
 import './App.css'
 import { getNeoforgeVersion, getForgeVersion, getFabricLoaderVerison, getFabricApiVersion } from './core/versionFetch'
 import { type FormState, needsFabric, needsNeoForge, needsForge } from './core'
-import Form from './components/Form'
-import GradlePropertiesPanel from './components/GradlePropertiesPanel'
+import GradleEditor from './components/GradleEditor'
 
 export default function App() {
   const [form, setForm] = createStore<FormState>({
@@ -45,14 +44,14 @@ export default function App() {
       </header>
 
       <div class="gen-layout">
-        <Form form={form} setForm={setForm} onSubmit={handleSubmit} />
-
-        <GradlePropertiesPanel
+        <GradleEditor
           form={form}
+          setForm={setForm}
           fabricLoaderVersion={fabricLoaderVersion}
           fabricApiVersion={fabricApiVersion}
           neoforgeVersion={neoforgeVersion}
           forgeVersion={forgeVersion}
+          onSubmit={handleSubmit}
         />
       </div>
     </main>

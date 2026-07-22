@@ -149,7 +149,7 @@ export default function Form(props: {
         <div class={styles.field}>
           <label for="authors">
             Authors
-            <span class={styles.hint}>comma-sep</span>
+            <span class={styles.hint}>Comma Separated</span>
           </label>
           <input
             id="authors"

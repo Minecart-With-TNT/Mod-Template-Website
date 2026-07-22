@@ -19,14 +19,8 @@
 }
 
 .gen-layout {
-  display: grid;
-  grid-template-columns: 480px 380px;
-  gap: 20px;
-  align-items: start;
-
-  /* (480 + 20 + 380)px = 880px < 900px */
-  @media (max-width: 900px) {
-    grid-template-columns: 1fr;
-    padding: 0 24px;
-  }
+  width: 100%;
+  max-width: 600px;
+  padding: 0 16px;
+  box-sizing: border-box;
 }
