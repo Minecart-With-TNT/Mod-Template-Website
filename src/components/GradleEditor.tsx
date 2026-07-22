@@ -1,13 +1,11 @@
-import {
-  createSignal, createEffect, createResource, onMount, For, Show, Suspense,
-  type Resource,
-} from 'solid-js'
+import { onMount, For, Show, type Resource } from 'solid-js'
 import { type SetStoreFunction } from 'solid-js/store'
 import {
   type FormState, type Loader,
-  needsFabric, needsNeoForge, needsForge, deriveDefaults, getMinecraftVersions,
+  needsFabric, needsNeoForge, needsForge, deriveDefaults,
 } from '../core'
 import styles from './GradleEditor.module.css'
+import { VersionPicker } from './VersionPicker'
 
 const LOADERS: { id: Loader; label: string }[] = [
   { id: 'fabric',       label: 'Fabric'      },
@@ -70,179 +68,6 @@ function EditLine(props: {
         {props.comment && (
           <span class={`${styles.comment} ${styles.inlineComment}`}># {props.comment}</span>
         )}
-      </span>
-    </div>
-  )
-}
-
-// ── Minecraft version combobox line ─────────────────────────────────────
-
-function McVersionLine(props: {
-  value: string
-  onSelect: (v: string) => void
-}) {
-  const [inputVal, setInputVal] = createSignal('')
-  const [open, setOpen] = createSignal(false)
-  const [allowSnapshots, setAllowSnapshots] = createSignal(false)
-  const [highlightIdx, setHighlightIdx] = createSignal(0)
-
-  let dropdownEl!: HTMLUListElement
-  let clickToFocus = false
-  let escapeSuppressed = false  // typing won't reopen after Escape until click or Ctrl+Space
-  let ctrlSpaceTs = 0           // timestamp of last Ctrl+Space, to guard against OS-level blur
-
-  const [versions] = createResource(
-    () => allowSnapshots() ? 'all' : 'releases',
-    mode => getMinecraftVersions(mode === 'all'),
-  )
-
-  const filteredList = () => {
-    const q = inputVal().toLowerCase()
-    const all = versions() ?? []
-    if (!q || q === props.value.toLowerCase()) return all
-    return all.filter(v => v.includes(q))
-  }
-
-  // User explicitly chose a version — close dropdown
-  function select(v: string) {
-    setInputVal(v)
-    setOpen(false)
-    props.onSelect(v)
-  }
-
-  // Auto-sync when version list changes (snapshot toggle, initial load) — never closes dropdown
-  createEffect(() => {
-    const vs = versions()
-    if (!vs?.length) return
-    if (!props.value || !vs.includes(props.value)) {
-      setInputVal(vs[0])
-      props.onSelect(vs[0])
-    } else {
-      setInputVal(props.value)
-    }
-  })
-
-  // Sync keyboard highlight to current value when list changes
-  createEffect(() => {
-    const list = filteredList()
-    const idx = list.indexOf(props.value)
-    setHighlightIdx(idx >= 0 ? idx : 0)
-  })
-
-  // Scroll highlighted item into view by directly setting scrollTop
-  createEffect(() => {
-    const idx = highlightIdx()
-    if (!open()) return
-    requestAnimationFrame(() => {
-      const el = dropdownEl
-      if (!el) return
-      const items = el.querySelectorAll<HTMLLIElement>('li')
-      const item = items[idx]
-      if (!item) return
-      const top = item.offsetTop
-      const bottom = top + item.offsetHeight
-      if (bottom > el.scrollTop + el.clientHeight) el.scrollTop = bottom - el.clientHeight
-      else if (top < el.scrollTop) el.scrollTop = top
-    })
-  })
-
-  function handleBlur(e: FocusEvent) {
-    if (Date.now() - ctrlSpaceTs < 300) return  // ignore OS-level blur from Ctrl+Space
-    if (dropdownEl?.contains(e.relatedTarget as Node)) return
-    setTimeout(() => {
-      setOpen(false)
-      if (!versions()?.includes(inputVal())) setInputVal(props.value || '')
-    }, 150)
-  }
-
-  function handleKeyDown(e: KeyboardEvent) {
-    if (e.ctrlKey && e.code === 'Space') {
-      e.preventDefault()
-      e.stopPropagation()
-      ctrlSpaceTs = Date.now()
-      escapeSuppressed = false
-      if (!open()) setOpen(true)
-      else setAllowSnapshots(v => !v)
-    } else if (e.key === 'Escape') {
-      e.preventDefault()
-      setOpen(false)
-      escapeSuppressed = true
-    } else if (open()) {
-      if (e.code === 'Space') {
-        // Swallow any stray space event when dropdown is open
-        e.preventDefault()
-        e.stopPropagation()
-      } else if (e.key === 'ArrowDown') {
-        e.preventDefault()
-        e.stopPropagation()
-        setHighlightIdx(i => Math.min(i + 1, filteredList().length - 1))
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault()
-        e.stopPropagation()
-        setHighlightIdx(i => Math.max(i - 1, 0))
-      } else if (e.key === 'Enter') {
-        e.preventDefault()
-        e.stopPropagation()
-        const item = filteredList()[highlightIdx()]
-        if (item) select(item)
-      }
-      // ArrowLeft/ArrowRight: no stopPropagation → bubbles to form-level nav
-    }
-  }
-
-  return (
-    <div class={styles.line}>
-      <span class={styles.key}>minecraft_version</span>
-      <span class={styles.eq}>=</span>
-      <span class={styles.editCell}>
-        <Suspense fallback={<span class={styles.placeholder}>loading...</span>}>
-          <span class={styles.comboWrap}>
-            <input
-              type="text"
-              class={styles.inlineInput}
-              value={inputVal()}
-              onInput={e => {
-                setInputVal(e.currentTarget.value)
-                if (!escapeSuppressed) setOpen(true)
-              }}
-              onMouseDown={() => { clickToFocus = true; escapeSuppressed = false }}
-              onFocus={() => { if (clickToFocus) { setOpen(true); clickToFocus = false } }}
-              onBlur={handleBlur}
-              onKeyDown={handleKeyDown}
-              placeholder="e.g. 1.21.1"
-              autocomplete="off"
-              spellcheck={false}
-            />
-            <Show when={open()}>
-              <div class={styles.dropdownWrap}>
-                <ul ref={dropdownEl} class={styles.dropdown}>
-                  <For each={filteredList()}>
-                    {(v, i) => (
-                      <li
-                        classList={{
-                          [styles.activeOption]: props.value === v,
-                          [styles.highlightedOption]: i() === highlightIdx(),
-                        }}
-                        onMouseDown={() => select(v)}
-                      >{v}</li>
-                    )}
-                  </For>
-                </ul>
-                <div
-                  class={styles.dropdownFooter}
-                  onMouseDown={e => {
-                    e.preventDefault()
-                    setAllowSnapshots(v => !v)
-                  }}
-                >
-                  <input type="checkbox" checked={allowSnapshots()} readOnly />
-                  <span>Include snapshots</span>
-                  <kbd class={styles.kbd}>Ctrl+Space</kbd>
-                </div>
-              </div>
-            </Show>
-          </span>
-        </Suspense>
       </span>
     </div>
   )
@@ -392,12 +217,13 @@ export default function GradleEditor(props: {
   }
 
   function handleBodyMouseDown(e: MouseEvent) {
-    const target = e.target as HTMLElement
-    if (target.closest('input, button, label, select, textarea')) return
-    e.preventDefault()
-    if (!formEl.contains(document.activeElement)) {
-      formEl.querySelector<HTMLElement>('input[type="text"]')?.focus()
-    }
+    // TODO fix
+    // const target = e.target as HTMLElement
+    // if (target.closest('input, button, label, select, textarea')) return
+    // e.preventDefault()
+    // if (!formEl.contains(document.activeElement)) {
+    //   formEl.querySelector<HTMLElement>('input[type="text"]')?.focus()
+    // }
   }
 
   return (
@@ -419,9 +245,9 @@ export default function GradleEditor(props: {
         <EditLine propKey="maven_group" value={props.form.projectPackage} placeholder={defaults().projectPackage} onInput={v => props.setForm('projectPackage', v)} />
         <EmptyLine />
         <CommentLine text="Dependencies" />
-        <McVersionLine
+        <VersionPicker
           value={props.form.mcVersion}
-          onSelect={v => props.setForm('mcVersion', v)}
+          setValue={v => props.setForm('mcVersion', v)}
         />
         <LoaderLine value={props.form.loader} onChange={l => props.setForm('loader', l)} />
         <Show when={needsFabric(props.form)}>

@@ -127,10 +127,17 @@ export async function getForgeVersion(mc: string): Promise<string | null> {
   return build ? `${mc}-${build}` : null;
 }
 
-export function getFabricLoaderVerison(mc: string): Promise<string | null> {
+export async function getFabricLoaderVerison(mc: string): Promise<string | null> {
   if (!mc) {
     return Promise.resolve(null);
   }
+  if (!(await MINECRAFT_VERSIONS).versions.find(v => v.id === mc)) {
+    return Promise.resolve(null);
+  }
+  return await getFabricLoaderVerisonUnsafe(mc);
+}
+
+export function getFabricLoaderVerisonUnsafe(mc: string): Promise<string | null> {
   if (!FABRIC_VERSIONS[mc]) {
     FABRIC_VERSIONS[mc] = fetchJson(`${URL_VERSIONS_FABRIC}${encodeURIComponent(mc)}`).then(resolveLatestFabricLoader).catch(error => {
       console.error('Failed to resolve Fabric loader for Minecraft version:', mc, error);
@@ -140,8 +147,15 @@ export function getFabricLoaderVerison(mc: string): Promise<string | null> {
   return FABRIC_VERSIONS[mc];
 }
 
-export function getFabricApiVersion(mc: string): Promise<string | null> {
+export async function getFabricApiVersion(mc: string): Promise<string | null> {
   if (!mc) return Promise.resolve(null);
+  if (!(await MINECRAFT_VERSIONS).versions.find(v => v.id === mc)) {
+    return Promise.resolve(null);
+  }
+  return await getFabricApiVersionUnsafe(mc);
+}
+
+function getFabricApiVersionUnsafe(mc: string): Promise<string | null> {
   if (!FABRIC_API_VERSIONS[mc]) {
     const params = new URLSearchParams();
     params.set('game_versions', JSON.stringify([mc]));
