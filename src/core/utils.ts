@@ -1,7 +1,7 @@
 import { type FormState } from './types'
 
 function toSnakeCase(str: string): string {
-  return str.toLowerCase().trim().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+  return str.toLowerCase().trim().replace(/[\s-]+/g, '_').replace(/[^a-z0-9_]/g, '');
 }
 
 export function deriveDefaults(form: FormState): FormState {
@@ -13,7 +13,7 @@ export function deriveDefaults(form: FormState): FormState {
   if (!result.projectPackage.trim()) {
     const firstAuthor = result.authors.split(',')[0]?.trim();
     const packageName = firstAuthor ? toSnakeCase(firstAuthor) : 'example';
-    result.projectPackage = `com.${packageName}.${result.modId}`;
+    result.projectPackage = `com.${packageName}.${result.modId.replaceAll('-', '_')}`;
   }
   return result;
 }

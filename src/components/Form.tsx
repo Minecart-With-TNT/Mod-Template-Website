@@ -93,7 +93,7 @@ export default function Form(props: {
   const defaults = () => deriveDefaults(props.form)
 
   function handleModIdChange(val: string) {
-    props.setForm('modId', val.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 64))
+    props.setForm('modId', val.toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 64))
   }
 
   function fillDefaults() {
@@ -107,25 +107,6 @@ export default function Form(props: {
 
   return (
     <form class={styles.form} onSubmit={handleSubmit}>
-      <div class={styles.topRow}>
-        <div class={styles.field} style="flex:1">
-          <label for="mc-version">Minecraft Version</label>
-          <McVersionCombobox
-            allowSnapshots={includeSnapshots}
-            value={props.form.mcVersion}
-            onSelect={v => props.setForm('mcVersion', v)}
-          />
-        </div>
-        <label class={styles.checkRow}>
-          <input
-            type="checkbox"
-            checked={includeSnapshots()}
-            onChange={e => setIncludeSnapshots(e.currentTarget.checked)}
-          />
-          Snapshots
-        </label>
-      </div>
-
       <div class={styles.row2}>
         <div class={styles.field}>
           <label for="mod-name">Mod Name</label>
@@ -141,7 +122,7 @@ export default function Form(props: {
         <div class={styles.field}>
           <label for="mod-id">
             Mod ID
-            <span class={styles.hint}>a-z 0-9 _</span>
+            <span class={styles.hint}>a-z 0-9 _ -</span>
           </label>
           <input
             id="mod-id"
@@ -149,7 +130,7 @@ export default function Form(props: {
             placeholder={defaults().modId}
             value={props.form.modId}
             onInput={e => handleModIdChange(e.currentTarget.value)}
-            pattern="[a-z0-9_]*"
+            pattern="[a-z0-9_-]*"
           />
         </div>
       </div>
@@ -194,6 +175,25 @@ export default function Form(props: {
           value={props.form.projectPackage}
           onInput={e => props.setForm('projectPackage', e.currentTarget.value)}
         />
+      </div>
+
+      <div class={styles.topRow}>
+        <div class={styles.field} style="flex:1">
+          <label for="mc-version">Minecraft Version</label>
+          <McVersionCombobox
+            allowSnapshots={includeSnapshots}
+            value={props.form.mcVersion}
+            onSelect={v => props.setForm('mcVersion', v)}
+          />
+        </div>
+        <label class={styles.checkRow}>
+          <input
+            type="checkbox"
+            checked={includeSnapshots()}
+            onChange={e => setIncludeSnapshots(e.currentTarget.checked)}
+          />
+          Snapshots
+        </label>
       </div>
 
       <fieldset class={styles.loaderGroup}>
