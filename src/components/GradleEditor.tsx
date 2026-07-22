@@ -213,7 +213,7 @@ export default function GradleEditor(props: {
     })
   }
 
-  function handleBodyMouseDown(e: MouseEvent) {
+  function handleBodyMouseDown(_e: MouseEvent) {
     // TODO fix
     // const target = e.target as HTMLElement
     // if (target.closest('input, button, label, select, textarea')) return
