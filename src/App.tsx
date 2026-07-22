@@ -11,9 +11,10 @@ export default function App() {
     mcVersion: '',
     modName: '',
     modId: '',
-    modVersion: '1.0.0',
+    modVersion: '',
     authors: '',
     loader: 'fabric',
+    projectPackage: '',
   });
 
   const [fabricLoaderVersion] = createResource(

@@ -1,6 +1,6 @@
 import { createSignal, onCleanup, Show, type Resource } from 'solid-js'
 import styles from './GradlePropertiesPanel.module.css'
-import { type FormState, needsFabric, needsNeoForge, needsForge } from '../core'
+import { type FormState, needsFabric, needsNeoForge, needsForge, deriveDefaults } from '../core'
 
 function LoadingText() {
   const [frame, setFrame] = createSignal(0);
@@ -61,21 +61,23 @@ export default function GradlePropertiesPanel(props: {
   const hasFabric = () => needsFabric(props.form);
   const hasNeoforge = () => needsNeoForge(props.form);
   const hasForge = () => needsForge(props.form);
+  const defaults = () => deriveDefaults(props.form);
 
   return (
     <aside class={styles.panel}>
       <div class={styles.header}>gradle.properties</div>
       <div class={styles.body}>
         <PropComment text="Mod Properties" />
-        <PropEntry k="mod_name"><StaticVal value={props.form.modName} placeholder="My Mod" /></PropEntry>
-        <PropEntry k="mod_id"><StaticVal value={props.form.modId} placeholder="my_mod" /></PropEntry>
-        <PropEntry k="mod_version"><StaticVal value={props.form.modVersion} placeholder="1.0.0" /></PropEntry>
-        <PropEntry k="mod_authors"><StaticVal value={props.form.authors} /></PropEntry>
+        <PropEntry k="mod_name"><StaticVal value={props.form.modName} placeholder={defaults().modName} /></PropEntry>
+        <PropEntry k="mod_id"><StaticVal value={props.form.modId} placeholder={defaults().modId} /></PropEntry>
+        <PropEntry k="mod_version"><StaticVal value={props.form.modVersion} placeholder={defaults().modVersion} /></PropEntry>
+        <PropEntry k="mod_authors"><StaticVal value={props.form.authors} placeholder={defaults().authors} /></PropEntry>
+        <PropEntry k="maven_group"><StaticVal value={props.form.projectPackage} placeholder={defaults().projectPackage} /></PropEntry>
         <PropBlank />
         <PropComment text="Dependencies" />
-        <PropEntry k="minecraft_version"><StaticVal value={props.form.mcVersion} /></PropEntry>
+        <PropEntry k="minecraft_version"><StaticVal value={props.form.mcVersion} placeholder={defaults().mcVersion} /></PropEntry>
         <Show when={hasFabric()}>
-          <PropEntry k="loader_version">
+          <PropEntry k="fabric_loader_version">
             <VersionVal resource={props.fabricLoaderVersion} mc={props.form.mcVersion} />
           </PropEntry>
           <PropEntry k="fabric_version">
