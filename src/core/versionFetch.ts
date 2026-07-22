@@ -1,5 +1,6 @@
 const URL_VERSIONS_MINECRAFT = 'https://piston-meta.mojang.com/mc/game/version_manifest.json';
 const URL_VERSIONS_NEOFORGE = 'https://maven.neoforged.net/api/maven/versions/releases/net/neoforged/neoforge';
+const URL_VERSIONS_FORGE = '/neoforge_versions.json';
 const URL_VERSIONS_FABRIC = 'https://meta.fabricmc.net/v2/versions/loader/';
 const URL_VERSIONS_FABRIC_API = 'https://api.modrinth.com/v2/project/P7dR8mSH/version';
 
@@ -10,6 +11,8 @@ type MinecraftVersions = {
 type NeoforgeVersions = {
   versions: string[];
 }
+
+type ForgePromotions = { promos: Record<string, string> };
 
 type FabricLoaderVersions = {loader: { version: string; stable: boolean }}[];
 
@@ -91,6 +94,7 @@ async function fetchJson(url: string): Promise<any> {
 
 const MINECRAFT_VERSIONS: Promise<MinecraftVersions> = fetchJson(URL_VERSIONS_MINECRAFT);
 const NEOFORGE_VERSIONS: Promise<NeoforgeVersions> = fetchJson(URL_VERSIONS_NEOFORGE);
+const FORGE_PROMOTIONS: Promise<ForgePromotions> = fetchJson(URL_VERSIONS_FORGE);
 const FABRIC_VERSIONS: { [mc: string]: Promise<string | null> } = {};
 const FABRIC_API_VERSIONS: { [mc: string]: Promise<string | null> } = {};
 
@@ -105,6 +109,13 @@ export async function getNeoforgeVersion(mc: string): Promise<string | null> {
     return null;
   }
   return resolveLatestNeoforge(await NEOFORGE_VERSIONS, mc);
+}
+
+export async function getForgeVersion(mc: string): Promise<string | null> {
+  if (!mc) return null;
+  const { promos } = await FORGE_PROMOTIONS;
+  const build = promos[`${mc}-recommended`] ?? promos[`${mc}-latest`] ?? null;
+  return build ? `${mc}-${build}` : null;
 }
 
 export function getFabricLoaderVerison(mc: string): Promise<string | null> {

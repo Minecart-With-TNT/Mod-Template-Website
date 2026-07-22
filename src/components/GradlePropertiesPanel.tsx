@@ -1,6 +1,6 @@
-import { createSignal, onCleanup, Show, type Resource } from 'solid-js';
-import styles from './GradlePropertiesPanel.module.css';
-import type { Loader } from '../core/types';
+import { createSignal, onCleanup, Show, type Resource } from 'solid-js'
+import styles from './GradlePropertiesPanel.module.css'
+import { type FormState, needsFabric, needsNeoForge, needsForge } from '../core'
 
 function LoadingText() {
   const [frame, setFrame] = createSignal(0);
@@ -31,17 +31,17 @@ function PropEntry(props: { k: string; children: any }) {
   );
 }
 
-function StaticVal(props: { value: () => string; placeholder?: string }) {
+function StaticVal(props: { value: string; placeholder?: string }) {
   return (
-    <Show when={props.value()} fallback={<span class={styles.placeholder}>{props.placeholder ?? ''}</span>}>
-      <span class={styles.val}>{props.value()}</span>
+    <Show when={props.value} fallback={<span class={styles.placeholder}>{props.placeholder ?? ''}</span>}>
+      <span class={styles.val}>{props.value}</span>
     </Show>
   );
 }
 
-function VersionVal(props: { resource: Resource<string | null>; mc: () => string }) {
+function VersionVal(props: { resource: Resource<string | null>; mc: string }) {
   return (
-    <Show when={props.mc()} fallback={<span class={styles.placeholder}> </span>}>
+    <Show when={props.mc} fallback={<span class={styles.placeholder}> </span>}>
       <Show when={!props.resource.loading} fallback={<LoadingText />}>
         <Show when={props.resource() != null} fallback={<span class={styles.unavail}>unavailable</span>}>
           <span class={styles.val}>{props.resource()}</span>
@@ -52,46 +52,44 @@ function VersionVal(props: { resource: Resource<string | null>; mc: () => string
 }
 
 export default function GradlePropertiesPanel(props: {
-  mcVersion: () => string;
-  modId: () => string;
-  modName: () => string;
-  modVersion: () => string;
-  authors: () => string;
-  loader: () => Loader;
-  needsFabric: () => boolean;
-  needsNeoForge: () => boolean;
-  fabricLoaderVersion: Resource<string | null>;
-  fabricApiVersion: Resource<string | null>;
-  neoforgeVersion: Resource<string | null>;
+  form: FormState
+  fabricLoaderVersion: Resource<string | null>
+  fabricApiVersion: Resource<string | null>
+  neoforgeVersion: Resource<string | null>
+  forgeVersion: Resource<string | null>
 }) {
-  const mc = props.mcVersion;
-  const hasFabric = () => props.loader() === 'fabric' || props.loader() === 'multiloader';
-  const hasNeoforge = () => props.loader() === 'neoforge' || props.loader() === 'multiloader';
+  const hasFabric = () => needsFabric(props.form);
+  const hasNeoforge = () => needsNeoForge(props.form);
+  const hasForge = () => needsForge(props.form);
 
   return (
     <aside class={styles.panel}>
       <div class={styles.header}>gradle.properties</div>
       <div class={styles.body}>
         <PropComment text="Mod Properties" />
-        <PropEntry k="mod_name"><StaticVal value={props.modName} placeholder="My Mod" /></PropEntry>
-        <PropEntry k="mod_id"><StaticVal value={props.modId} placeholder="my_mod" /></PropEntry>
-        <PropEntry k="mod_version"><StaticVal value={props.modVersion} placeholder="1.0.0" /></PropEntry>
-        <PropEntry k="mod_authors"><StaticVal value={props.authors} /></PropEntry>
+        <PropEntry k="mod_name"><StaticVal value={props.form.modName} placeholder="My Mod" /></PropEntry>
+        <PropEntry k="mod_id"><StaticVal value={props.form.modId} placeholder="my_mod" /></PropEntry>
+        <PropEntry k="mod_version"><StaticVal value={props.form.modVersion} placeholder="1.0.0" /></PropEntry>
+        <PropEntry k="mod_authors"><StaticVal value={props.form.authors} /></PropEntry>
         <PropBlank />
         <PropComment text="Dependencies" />
-        <PropEntry k="minecraft_version"><StaticVal value={mc} /></PropEntry>
+        <PropEntry k="minecraft_version"><StaticVal value={props.form.mcVersion} /></PropEntry>
         <Show when={hasFabric()}>
           <PropEntry k="loader_version">
-            <VersionVal resource={props.fabricLoaderVersion} mc={mc} />
+            <VersionVal resource={props.fabricLoaderVersion} mc={props.form.mcVersion} />
           </PropEntry>
           <PropEntry k="fabric_version">
-            <VersionVal resource={props.fabricApiVersion} mc={mc} />
+            <VersionVal resource={props.fabricApiVersion} mc={props.form.mcVersion} />
           </PropEntry>
         </Show>
-
         <Show when={hasNeoforge()}>
           <PropEntry k="neoforge_version">
-            <VersionVal resource={props.neoforgeVersion} mc={mc} />
+            <VersionVal resource={props.neoforgeVersion} mc={props.form.mcVersion} />
+          </PropEntry>
+        </Show>
+        <Show when={hasForge()}>
+          <PropEntry k="forge_version">
+            <VersionVal resource={props.forgeVersion} mc={props.form.mcVersion} />
           </PropEntry>
         </Show>
       </div>
