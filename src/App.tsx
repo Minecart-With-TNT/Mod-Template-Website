@@ -1,43 +1,33 @@
-import { createResource, createSignal } from 'solid-js'
-import { createStore } from 'solid-js/store'
+import { createResource } from 'solid-js'
 import './App.css'
 import { getNeoforgeVersion, getForgeVersion, getFabricLoaderVerison, getFabricApiVersion } from './core/versionFetch'
-import { type FormState, needsFabric, needsNeoForge, needsForge } from './core'
+import { needsFabric, needsNeoForge, needsForge } from './core'
+import { getForm } from './store'
 import GradleEditor from './components/GradleEditor'
 import DescriptionPanel from './components/DescriptionPanel'
 
 export default function App() {
-  const [activeField, setActiveField] = createSignal('welcome')
-
-  const [form, setForm] = createStore<FormState>({
-    mcVersion: '',
-    modName: '',
-    modId: '',
-    modVersion: '',
-    authors: '',
-    loader: 'fabric',
-    projectPackage: '',
-  });
 
   const [fabricLoaderVersion] = createResource(
-    () => (needsFabric(form) && form.mcVersion) || undefined,
+    () => (needsFabric(getForm()) && getForm().mcVersion) || undefined,
     getFabricLoaderVerison,
   );
   const [fabricApiVersion] = createResource(
-    () => (needsFabric(form) && form.mcVersion) || undefined,
+    () => (needsFabric(getForm()) && getForm().mcVersion) || undefined,
     getFabricApiVersion,
   );
   const [neoforgeVersion] = createResource(
-    () => needsNeoForge(form) ? form.mcVersion : undefined,
+    () => needsNeoForge(getForm()) ? getForm().mcVersion : undefined,
     getNeoforgeVersion,
   );
   const [forgeVersion] = createResource(
-    () => needsForge(form) ? form.mcVersion : undefined,
+    () => needsForge(getForm()) ? getForm().mcVersion : undefined,
     getForgeVersion,
   );
 
   function handleSubmit() {
-    alert(`Generating ${form.loader} template for "${form.modName}" (MC ${form.mcVersion})`)
+    const f = getForm()
+    alert(`Generating ${f.loader} template for "${f.modName}" (MC ${f.mcVersion})`)
   }
 
   return (
@@ -49,17 +39,14 @@ export default function App() {
       <div class="gen-layout">
         <div class="gen-editor">
           <GradleEditor
-            form={form}
-            setForm={setForm}
             fabricLoaderVersion={fabricLoaderVersion}
             fabricApiVersion={fabricApiVersion}
             neoforgeVersion={neoforgeVersion}
             forgeVersion={forgeVersion}
             onSubmit={handleSubmit}
-            onFieldFocus={setActiveField}
           />
         </div>
-        <DescriptionPanel fieldId={activeField()} loader={form.loader} />
+        <DescriptionPanel />
       </div>
     </main>
   )

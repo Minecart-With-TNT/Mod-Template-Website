@@ -4,8 +4,8 @@ import { markedHighlight } from 'marked-highlight'
 import hljs from 'highlight.js/lib/core'
 import java from 'highlight.js/lib/languages/java'
 import 'highlight.js/styles/atom-one-dark.min.css'
-import type { Loader } from '../core/types'
-import * as docs from './docs'
+import docs from '../docs'
+import { getCurrentDoc } from '../store'
 import styles from './DescriptionPanel.module.css'
 
 hljs.registerLanguage('java', java)
@@ -20,15 +20,9 @@ marked.use(markedHighlight({
   },
 }))
 
-export default function DescriptionPanel(props: {
-  fieldId: string
-  loader: Loader
-}) {
-  const key = () =>
-    props.fieldId === 'mod_loader' ? `loader_${props.loader}` : props.fieldId
-
+export default function DescriptionPanel() {
   const html = createMemo(() => {
-    const md = (docs as Record<string, string>)[key()] ?? docs.welcome
+    const md = docs[getCurrentDoc()] ?? docs['welcome']
     return marked.parse(md) as string
   })
 

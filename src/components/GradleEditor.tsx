@@ -1,11 +1,9 @@
 import { onMount, For, Show, type Resource } from 'solid-js'
-import { type SetStoreFunction } from 'solid-js/store'
-import {
-  type FormState, type Loader,
-  needsFabric, needsNeoForge, needsForge, deriveDefaults,
-} from '../core'
+import { type FormState, type Loader, needsFabric, needsNeoForge, needsForge } from '../core'
 import styles from './GradleEditor.module.css'
 import { VersionPicker } from './VersionPicker'
+import { setCurrentDoc, getForm, getDefaults, updateForm } from '../store'
+import type { DocId } from '../docs'
 
 const LOADERS: { id: Loader; label: string }[] = [
   { id: 'fabric',       label: 'Fabric'      },
@@ -42,15 +40,16 @@ function ResourceLine(props: { propKey: string; resource: Resource<string | null
   )
 }
 
+type StringFormKey = Exclude<keyof FormState, 'loader'>
+
 // ── Editable field line ─────────────────────────────────────────────────
 
 function EditLine(props: {
   propKey: string
-  value: string
-  placeholder: string
-  onInput: (v: string) => void
+  formKey: StringFormKey
+  docId: DocId
+  valueFixer?: (v: string) => string
   comment?: string
-  onFocus?: () => void
 }) {
   return (
     <div class={styles.line}>
@@ -60,10 +59,13 @@ function EditLine(props: {
         <input
           type="text"
           class={styles.inlineInput}
-          value={props.value}
-          placeholder={props.placeholder}
-          onInput={e => props.onInput(e.currentTarget.value)}
-          onFocus={props.onFocus}
+          value={getForm()[props.formKey]}
+          placeholder={getDefaults()[props.formKey]}
+          onInput={e => {
+            const v = e.currentTarget.value;
+            updateForm(props.formKey, props.valueFixer ? props.valueFixer(v) : v);
+          }}
+          onFocus={() => setCurrentDoc(props.docId)}
           autocomplete="off"
           spellcheck={false}
         />
@@ -120,26 +122,17 @@ function SubmitLine() {
 // ── Main export ─────────────────────────────────────────────────────────
 
 export default function GradleEditor(props: {
-  form: FormState
-  setForm: SetStoreFunction<FormState>
   fabricLoaderVersion: Resource<string | null>
   fabricApiVersion: Resource<string | null>
   neoforgeVersion: Resource<string | null>
   forgeVersion: Resource<string | null>
   onSubmit?: () => void
-  onFieldFocus?: (id: string) => void
 }) {
-  const defaults = () => deriveDefaults(props.form)
-
   let formEl!: HTMLFormElement
 
   onMount(() => {
     formEl.querySelector<HTMLInputElement>('input[type="text"]')?.focus()
   })
-
-  function handleModId(val: string) {
-    props.setForm('modId', val.toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 64))
-  }
 
   function handleSubmit(e: SubmitEvent) {
     e.preventDefault()
@@ -242,27 +235,27 @@ export default function GradleEditor(props: {
       <div class={styles.fileHeader}>gradle.properties</div>
       <div class={styles.body}>
         <CommentLine text="Mod Properties" />
-        <EditLine propKey="mod_name"    value={props.form.modName}        placeholder={defaults().modName}        onInput={v => props.setForm('modName', v)}        onFocus={() => props.onFieldFocus?.('mod_name')} />
-        <EditLine propKey="mod_id"      value={props.form.modId}          placeholder={defaults().modId}          onInput={handleModId}                              onFocus={() => props.onFieldFocus?.('mod_id')} />
-        <EditLine propKey="mod_version" value={props.form.modVersion}     placeholder={defaults().modVersion}     onInput={v => props.setForm('modVersion', v)}     onFocus={() => props.onFieldFocus?.('mod_version')} />
-        <EditLine propKey="mod_authors" value={props.form.authors}        placeholder={defaults().authors}        onInput={v => props.setForm('authors', v)}        onFocus={() => props.onFieldFocus?.('mod_authors')} />
-        <EditLine propKey="maven_group" value={props.form.projectPackage} placeholder={defaults().projectPackage} onInput={v => props.setForm('projectPackage', v)} onFocus={() => props.onFieldFocus?.('maven_group')} />
+        <EditLine propKey="mod_name"    formKey="modName"        docId="mod_name" />
+        <EditLine propKey="mod_id"      formKey="modId"          docId="mod_id"   valueFixer={v => v.toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 64)} />
+        <EditLine propKey="mod_version" formKey="modVersion"     docId="mod_version" />
+        <EditLine propKey="mod_authors" formKey="authors"        docId="mod_authors" />
+        <EditLine propKey="maven_group" formKey="projectPackage" docId="maven_group" />
         <EmptyLine />
         <CommentLine text="Dependencies" />
         <VersionPicker
-          value={props.form.mcVersion}
-          setValue={v => props.setForm('mcVersion', v)}
-          onFocus={() => props.onFieldFocus?.('minecraft_version')}
+          value={getForm().mcVersion}
+          setValue={v => updateForm('mcVersion', v)}
+          onFocus={() => setCurrentDoc('minecraft_version')}
         />
-        <LoaderLine value={props.form.loader} onChange={l => props.setForm('loader', l)} onFocus={() => props.onFieldFocus?.('mod_loader')} />
-        <Show when={needsFabric(props.form)}>
+        <LoaderLine value={getForm().loader} onChange={l => { updateForm('loader', l); setCurrentDoc(`loader_${l}`) }} onFocus={() => setCurrentDoc(`loader_${getForm().loader}`)} />
+        <Show when={needsFabric(getForm())}>
           <ResourceLine propKey="fabric_loader_version" resource={props.fabricLoaderVersion} />
           <ResourceLine propKey="fabric_api_version"    resource={props.fabricApiVersion} />
         </Show>
-        <Show when={needsNeoForge(props.form)}>
+        <Show when={needsNeoForge(getForm())}>
           <ResourceLine propKey="neoforge_version" resource={props.neoforgeVersion} />
         </Show>
-        <Show when={needsForge(props.form)}>
+        <Show when={needsForge(getForm())}>
           <ResourceLine propKey="forge_version" resource={props.forgeVersion} />
         </Show>
         <EmptyLine />
