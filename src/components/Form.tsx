@@ -60,6 +60,7 @@ function McVersionCombobox(props: {
     <Suspense fallback={<div class={styles.skeletonInput} />}>
       <div class={styles.combobox}>
         <input
+          id="mc-version"
           type="text"
           value={inputVal()}
           onInput={e => { setInputVal(e.currentTarget.value); setOpen(true); }}

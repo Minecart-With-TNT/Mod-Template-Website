@@ -42,7 +42,6 @@ export default function App() {
     <main id="generator">
       <header class="gen-header">
         <h1>Mod Template Generator</h1>
-        <p>Fill in the fields, pick a loader, and download your starter project.</p>
       </header>
 
       <div class="gen-layout">
