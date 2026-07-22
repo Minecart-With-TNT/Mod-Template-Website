@@ -1,29 +1,10 @@
-import { createResource } from 'solid-js'
 import './App.css'
-import { getNeoforgeVersion, getForgeVersion, getFabricLoaderVerison, getFabricApiVersion } from './core/versionFetch'
-import { needsFabric, needsNeoForge, needsForge } from './core'
 import { getForm } from './store'
 import GradleEditor from './components/GradleEditor'
 import DescriptionPanel from './components/DescriptionPanel'
 
 export default function App() {
 
-  const [fabricLoaderVersion] = createResource(
-    () => (needsFabric(getForm()) && getForm().mcVersion) || undefined,
-    getFabricLoaderVerison,
-  );
-  const [fabricApiVersion] = createResource(
-    () => (needsFabric(getForm()) && getForm().mcVersion) || undefined,
-    getFabricApiVersion,
-  );
-  const [neoforgeVersion] = createResource(
-    () => needsNeoForge(getForm()) ? getForm().mcVersion : undefined,
-    getNeoforgeVersion,
-  );
-  const [forgeVersion] = createResource(
-    () => needsForge(getForm()) ? getForm().mcVersion : undefined,
-    getForgeVersion,
-  );
 
   function handleSubmit() {
     const f = getForm()
@@ -38,13 +19,7 @@ export default function App() {
 
       <div class="gen-layout">
         <div class="gen-editor">
-          <GradleEditor
-            fabricLoaderVersion={fabricLoaderVersion}
-            fabricApiVersion={fabricApiVersion}
-            neoforgeVersion={neoforgeVersion}
-            forgeVersion={forgeVersion}
-            onSubmit={handleSubmit}
-          />
+          <GradleEditor onSubmit={handleSubmit} />
         </div>
         <DescriptionPanel />
       </div>

@@ -1,7 +1,7 @@
 import { createStore } from 'solid-js/store'
 import type { DocId } from './docs'
-import { type FormState, deriveDefaults } from './core'
-import { createMemo, createRoot } from 'solid-js';
+import { type FormState, deriveDefaults, needsFabric, needsNeoForge, needsForge, getFabricLoaderVerison, getFabricApiVersion, getNeoforgeVersion, getForgeVersion } from './core'
+import { createMemo, createResource, createRoot } from 'solid-js';
 
 type State = {
   activeDoc: DocId;
@@ -37,10 +37,38 @@ export function updateForm(key: keyof FormState, value: FormState[keyof FormStat
   setStore('form', key, value);
 }
 
-export const { getDefaults } = createRoot(() => {
+export const {
+  getDefaults,
+  fabricLoaderVersion,
+  fabricApiVersion,
+  neoforgeVersion,
+  forgeVersion,
+} = createRoot(() => {
   const getDefaults = createMemo(() => deriveDefaults(store.form));
+
+  const [fabricLoaderVersion] = createResource(
+    () => (needsFabric(getForm()) && getForm().mcVersion) || undefined,
+    getFabricLoaderVerison,
+  );
+  const [fabricApiVersion] = createResource(
+    () => (needsFabric(getForm()) && getForm().mcVersion) || undefined,
+    getFabricApiVersion,
+  );
+  const [neoforgeVersion] = createResource(
+    () => needsNeoForge(getForm()) ? getForm().mcVersion : undefined,
+    getNeoforgeVersion,
+  );
+  const [forgeVersion] = createResource(
+    () => needsForge(getForm()) ? getForm().mcVersion : undefined,
+    getForgeVersion,
+  );
+
   return {
-    getDefaults
+    getDefaults,
+    fabricLoaderVersion,
+    fabricApiVersion,
+    neoforgeVersion,
+    forgeVersion,
   };
 });
 

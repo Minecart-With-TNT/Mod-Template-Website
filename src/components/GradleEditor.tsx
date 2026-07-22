@@ -2,7 +2,7 @@ import { onMount, createResource, For, Show, type Resource } from 'solid-js'
 import { type FormState, type Loader, needsFabric, needsNeoForge, needsForge, getMinecraftVersions } from '../core'
 import styles from './GradleEditor.module.css'
 import { LinePicker } from './LinePicker'
-import { setCurrentDoc, getForm, getDefaults, updateForm } from '../store'
+import { setCurrentDoc, getForm, getDefaults, updateForm, fabricLoaderVersion, fabricApiVersion, neoforgeVersion, forgeVersion } from '../store'
 import type { DocId } from '../docs'
 
 const LOADERS: { id: Loader; label: string }[] = [
@@ -122,10 +122,6 @@ function SubmitLine() {
 // ── Main export ─────────────────────────────────────────────────────────
 
 export default function GradleEditor(props: {
-  fabricLoaderVersion: Resource<string | null>
-  fabricApiVersion: Resource<string | null>
-  neoforgeVersion: Resource<string | null>
-  forgeVersion: Resource<string | null>
   onSubmit?: () => void
 }) {
   const [mcVersions] = createResource(getMinecraftVersions)
@@ -254,14 +250,14 @@ export default function GradleEditor(props: {
         />
         <LoaderLine value={getForm().loader} onChange={l => { updateForm('loader', l); setCurrentDoc(`loader_${l}`) }} onFocus={() => setCurrentDoc(`loader_${getForm().loader}`)} />
         <Show when={needsFabric(getForm())}>
-          <ResourceLine propKey="fabric_loader_version" resource={props.fabricLoaderVersion} />
-          <ResourceLine propKey="fabric_api_version"    resource={props.fabricApiVersion} />
+          <ResourceLine propKey="fabric_loader_version" resource={fabricLoaderVersion} />
+          <ResourceLine propKey="fabric_api_version"    resource={fabricApiVersion} />
         </Show>
         <Show when={needsNeoForge(getForm())}>
-          <ResourceLine propKey="neoforge_version" resource={props.neoforgeVersion} />
+          <ResourceLine propKey="neoforge_version" resource={neoforgeVersion} />
         </Show>
         <Show when={needsForge(getForm())}>
-          <ResourceLine propKey="forge_version" resource={props.forgeVersion} />
+          <ResourceLine propKey="forge_version" resource={forgeVersion} />
         </Show>
         <EmptyLine />
         <SubmitLine />
