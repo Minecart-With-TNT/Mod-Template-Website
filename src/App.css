@@ -1,6 +1,5 @@
 #generator {
-  width: 560px;
-  max-width: 100%;
+  max-width: 1100px;
   margin: 0 auto;
   padding: 48px 24px 80px;
   box-sizing: border-box;
@@ -15,6 +14,17 @@
   }
   p {
     color: var(--text);
+  }
+}
+
+.gen-layout {
+  display: grid;
+  grid-template-columns: 480px 1fr;
+  gap: 48px;
+  align-items: start;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -139,7 +149,7 @@
   color: var(--text);
 }
 
-/* ── loading / unavailable ── */
+/* ── skeleton (MC version picker only) ── */
 .skeleton-input {
   height: 42px;
   border-radius: 8px;
@@ -151,15 +161,6 @@
 @keyframes shimmer {
   0%   { background-position: 200% 0; }
   100% { background-position: -200% 0; }
-}
-
-.version-unavailable {
-  font-size: 13px;
-  color: var(--text);
-  padding: 10px 14px;
-  border: 1.5px dashed var(--border);
-  border-radius: 8px;
-  margin: 0;
 }
 
 /* ── submit ── */
@@ -189,4 +190,73 @@
   &:active {
     opacity: 0.75;
   }
+}
+
+/* ── gradle.properties panel ── */
+.props-panel {
+  position: sticky;
+  top: 24px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  overflow: hidden;
+  font-family: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+}
+
+.props-header {
+  font-family: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  background: var(--border);
+  padding: 8px 16px;
+  letter-spacing: 0.02em;
+}
+
+.props-body {
+  background: var(--code-bg);
+  padding: 20px 24px;
+  overflow-x: auto;
+}
+
+.prop-line {
+  display: flex;
+  align-items: baseline;
+  font-size: 13px;
+  line-height: 1.9;
+  white-space: nowrap;
+}
+
+.prop-blank {
+  height: 0.9em;
+}
+
+.prop-comment {
+  color: var(--prop-comment);
+}
+
+.prop-key {
+  color: var(--prop-key);
+}
+
+.prop-eq {
+  color: var(--prop-comment);
+}
+
+.prop-val {
+  color: var(--prop-val);
+}
+
+.prop-loading {
+  color: var(--text);
+  font-style: italic;
+}
+
+.prop-placeholder {
+  color: var(--border);
+}
+
+.prop-unavail {
+  color: var(--text);
+  opacity: 0.5;
+  font-style: italic;
 }

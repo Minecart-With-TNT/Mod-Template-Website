@@ -1,6 +1,7 @@
 const URL_VERSIONS_MINECRAFT = 'https://piston-meta.mojang.com/mc/game/version_manifest.json';
 const URL_VERSIONS_NEOFORGE = 'https://maven.neoforged.net/api/maven/versions/releases/net/neoforged/neoforge';
 const URL_VERSIONS_FABRIC = 'https://meta.fabricmc.net/v2/versions/loader/';
+const URL_VERSIONS_FABRIC_API = 'https://api.modrinth.com/v2/project/P7dR8mSH/version';
 
 type MinecraftVersions = {
   versions: { id: string; type: string }[];
@@ -11,6 +12,8 @@ type NeoforgeVersions = {
 }
 
 type FabricLoaderVersions = {loader: { version: string; stable: boolean }}[];
+
+type ModrinthVersionEntry = { version_number: string };
 
 // ===== resolve latest ======
 
@@ -89,6 +92,7 @@ async function fetchJson(url: string): Promise<any> {
 const MINECRAFT_VERSIONS: Promise<MinecraftVersions> = fetchJson(URL_VERSIONS_MINECRAFT);
 const NEOFORGE_VERSIONS: Promise<NeoforgeVersions> = fetchJson(URL_VERSIONS_NEOFORGE);
 const FABRIC_VERSIONS: { [mc: string]: Promise<string | null> } = {};
+const FABRIC_API_VERSIONS: { [mc: string]: Promise<string | null> } = {};
 
 // ===== exports ======
 
@@ -111,4 +115,16 @@ export function getFabricLoaderVerison(mc: string): Promise<string | null> {
     FABRIC_VERSIONS[mc] = fetchJson(`${URL_VERSIONS_FABRIC}${encodeURIComponent(mc)}`).then(resolveLatestFabricLoader);
   }
   return FABRIC_VERSIONS[mc];
+}
+
+export function getFabricApiVersion(mc: string): Promise<string | null> {
+  if (!mc) return Promise.resolve(null);
+  if (!FABRIC_API_VERSIONS[mc]) {
+    const params = new URLSearchParams();
+    params.set('game_versions', JSON.stringify([mc]));
+    params.set('loaders', JSON.stringify(['fabric']));
+    FABRIC_API_VERSIONS[mc] = fetchJson(`${URL_VERSIONS_FABRIC_API}?${params}`)
+      .then((versions: ModrinthVersionEntry[]) => versions?.[0]?.version_number ?? null);
+  }
+  return FABRIC_API_VERSIONS[mc];
 }
