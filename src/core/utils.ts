@@ -1,8 +1,16 @@
 import { type FormState } from './types'
 
 function toSnakeCase(str: string): string {
-  return str.toLowerCase().trim().replace(/[\s-]+/g, '_').replace(/[^a-z0-9_]/g, '');
+  return str
+    .replace(/([a-z0-9])([A-Z])/g, '$1_$2')    // camelCase boundary: exampleMod -> example_Mod
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1_$2') // acronym boundary: UUIDName -> UUID_Name
+    .toLowerCase()                             // lowercase everything
+    .replace(/[\s-]/g, '_')                    // spaces/hyphens -> underscore
+    .replace(/[^a-z0-9_]/g, '')                // drop invalid chars
+    .replace(/_+/g, '_')                       // collapse repeat underscores
+    .replace(/^_|_$/g, '');                    // trim leading/trailing underscore
 }
+
 
 export function deriveDefaults(form: FormState): FormState {
   const result: FormState = { ...form };
