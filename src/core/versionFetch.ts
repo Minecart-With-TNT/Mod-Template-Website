@@ -1,6 +1,6 @@
 const URL_VERSIONS_MINECRAFT = 'https://piston-meta.mojang.com/mc/game/version_manifest.json';
 const URL_VERSIONS_NEOFORGE = 'https://maven.neoforged.net/api/maven/versions/releases/net/neoforged/neoforge';
-const URL_VERSIONS_FORGE = '/neoforge_versions.json';
+const URL_VERSIONS_FORGE = './forge_versions.json';
 const URL_VERSIONS_FABRIC = 'https://meta.fabricmc.net/v2/versions/loader/';
 const URL_VERSIONS_FABRIC_API = 'https://api.modrinth.com/v2/project/P7dR8mSH/version';
 
