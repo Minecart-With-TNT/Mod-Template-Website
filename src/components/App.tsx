@@ -1,10 +1,9 @@
-import './App.css'
-import { getForm } from './store'
-import GradleEditor from './components/GradleEditor'
-import DescriptionPanel from './components/DescriptionPanel'
+import styles from './App.module.css'
+import { getForm } from '../store'
+import GradleEditor from './GradleEditor'
+import DescriptionPanel from './DescriptionPanel'
 
 export default function App() {
-
 
   function handleSubmit() {
     const f = getForm()
@@ -12,16 +11,16 @@ export default function App() {
   }
 
   return (
-    <main id="generator">
-      <header class="gen-header">
+    <main class={styles.generator}>
+      <header class={styles.header}>
         <h1>Mod Template Generator</h1>
       </header>
 
-      <div class="gen-layout">
-        <div class="gen-editor">
+      <div class={styles.layout}>
+        <div class={styles.editor}>
           <GradleEditor onSubmit={handleSubmit} />
         </div>
-        <div class="gen-docs">
+        <div class={styles.docs}>
           <DescriptionPanel />
         </div>
       </div>

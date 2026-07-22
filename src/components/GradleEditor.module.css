@@ -3,6 +3,9 @@
   background: var(--code-bg);
   padding: 12px 0;
   counter-reset: line-number;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 /* ── Lines ── */
@@ -76,7 +79,6 @@
   padding: 0;
   min-width: 0;
   flex: 1;
-  box-sizing: border-box;
   transition: border-color 0.15s, background 0.15s;
 
   &::placeholder {

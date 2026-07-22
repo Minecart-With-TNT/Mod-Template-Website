@@ -1,13 +1,13 @@
-#generator {
+.generator {
   padding-top: 24px;
-  padding-bottom: 80px;
-  box-sizing: border-box;
+  padding-bottom: 24px;
+  height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-.gen-header {
+.header {
   text-align: center;
 
   h1 {
@@ -18,42 +18,52 @@
   }
 }
 
-.gen-layout {
+.layout {
   width: 100%;
   max-width: 980px;
   padding: 0 16px;
-  box-sizing: border-box;
   display: flex;
   gap: 24px;
-  align-items: flex-start;
+  flex: 1;
+  min-height: 0;
 }
 
-.gen-editor {
+.editor {
+  flex: 1;
+  min-width: 375px;
+  display: flex;
+  flex-direction: column;
+}
+
+.docs {
   flex: 1;
   min-width: 0;
-  max-width: 600px;
-}
-
-.gen-docs {
-  width: 500px;
-  flex-shrink: 0;
-  position: sticky;
-  top: 24px;
-  align-self: flex-start;
+  display: flex;
+  flex-direction: column;
 }
 
 @media (max-width: 720px) {
-  .gen-layout {
+
+  .generator {
+    overflow-y: scroll;
+  }
+
+  .layout {
     flex-direction: column;
   }
 
-  .gen-editor {
+  .editor {
+    flex: none;
     max-width: 100%;
     width: 100%;
+    max-height: none;
+    display: block;
   }
 
-  .gen-docs {
+  .docs {
+    flex: none;
     width: 100%;
-    position: static;
+    max-height: none;
+    display: block;
   }
 }
