@@ -2,7 +2,6 @@ import {
   createSignal,
   createEffect,
   createResource,
-  createMemo,
   Show,
   For,
   Suspense,
@@ -22,12 +21,6 @@ const LOADERS: { id: Loader; name: string; desc: string }[] = [
 
 
 
-// ── helpers ───────────────────────────────────────────────────────────────────
-
-function toModId(name: string) {
-  return name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '').slice(0, 64)
-}
-
 // ── component ─────────────────────────────────────────────────────────────────
 
 export default function App() {
@@ -36,12 +29,10 @@ export default function App() {
   const [mcVersion, setMcVersion] = createSignal('');
   const [modName, setModName] = createSignal('');
   const [modId, setModId] = createSignal('');
-  const [modIdTouched, setModIdTouched] = createSignal(false);
   const [authors, setAuthors] = createSignal('');
   const [loader, setLoader] = createSignal<Loader>('fabric');
   
   function handleModIdChange(val: string) {
-    setModIdTouched(true)
     setModId(val.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 64))
   }
 
@@ -168,17 +159,21 @@ export default function App() {
 
 function MinecraftVersionPicker(props: { allowSnapshots: () => boolean, onSelect: (mcVersion: string) => void }) {
   const [mcVersion, setMcVersion] = createSignal('');
-  const [minecraftVersions] = createResource(props.allowSnapshots, getMinecraftVersions);
+  const [minecraftVersions] = createResource(
+    () => (props.allowSnapshots() ? 'all' : 'releases'),
+    mode => getMinecraftVersions(mode === 'all'),
+  );
 
   function set(version: string) {
     setMcVersion(version);
     props.onSelect(version);
   }
-  // Default MC version once list loads
-  createEffect(async () => {
+  // Default MC version once list loads; reset only if current pick isn't in the filtered list
+  createEffect(() => {
     const versions = minecraftVersions();
-    console.log('createEffect called ', versions);
-    if (versions?.length && !mcVersion()) set(versions[0]);
+    if (!versions?.length) return;
+    const current = mcVersion();
+    if (!current || !versions.includes(current)) set(versions[0]);
   })
   return (
     <div class="field">

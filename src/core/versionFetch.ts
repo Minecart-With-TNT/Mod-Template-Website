@@ -93,7 +93,6 @@ const FABRIC_VERSIONS: { [mc: string]: Promise<string | null> } = {};
 // ===== exports ======
 
 export async function getMinecraftVersions(allowSnapshot: boolean = false): Promise<string[]> {
-  console.log('getMinecraftVersions called ', allowSnapshot);
   return (await MINECRAFT_VERSIONS).versions.filter(v => allowSnapshot || v.type === 'release').map(v => v.id);
 }
 
