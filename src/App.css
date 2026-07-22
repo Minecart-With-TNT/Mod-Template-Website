@@ -34,6 +34,14 @@
   max-width: 600px;
 }
 
+.gen-docs {
+  width: 500px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 24px;
+  align-self: flex-start;
+}
+
 @media (max-width: 720px) {
   .gen-layout {
     flex-direction: column;
@@ -42,5 +50,10 @@
   .gen-editor {
     max-width: 100%;
     width: 100%;
+  }
+
+  .gen-docs {
+    width: 100%;
+    position: static;
   }
 }

@@ -7,6 +7,7 @@ import 'highlight.js/styles/atom-one-dark.min.css'
 import docs from '../docs'
 import { getCurrentDoc } from '../store'
 import styles from './DescriptionPanel.module.css'
+import Card from './Card'
 
 hljs.registerLanguage('java', java)
 
@@ -27,9 +28,8 @@ export default function DescriptionPanel() {
   })
 
   return (
-    <aside class={styles.panel}>
-      <div class={styles.header}>documentation</div>
+    <Card title="documentation">
       <div class={styles.body} innerHTML={html()} />
-    </aside>
+    </Card>
   )
 }

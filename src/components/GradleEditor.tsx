@@ -1,4 +1,5 @@
 import { onMount, createResource, For, Show, type Resource } from 'solid-js'
+import Card from './Card'
 import { type FormState, type Loader, needsFabric, needsNeoForge, needsForge, getMinecraftVersions } from '../core'
 import styles from './GradleEditor.module.css'
 import { LinePicker } from './LinePicker'
@@ -222,16 +223,15 @@ export default function GradleEditor(props: {
   }
 
   return (
-    <form
-      ref={formEl}
-      class={styles.editor}
-      onSubmit={handleSubmit}
-      onKeyDown={handleEditorKeyDown}
-      onFocus={handleEditorFocus}
-      onMouseDown={handleBodyMouseDown}
-    >
-      <div class={styles.fileHeader}>gradle.properties</div>
-      <div class={styles.body}>
+    <Card title="gradle.properties">
+      <form
+        ref={formEl}
+        class={styles.body}
+        onSubmit={handleSubmit}
+        onKeyDown={handleEditorKeyDown}
+        onFocus={handleEditorFocus}
+        onMouseDown={handleBodyMouseDown}
+      >
         <CommentLine text="Mod Properties" />
         <EditLine propKey="mod_name"    formKey="modName"        docId="mod_name" />
         <EditLine propKey="mod_id"      formKey="modId"          docId="mod_id"   valueFixer={v => v.toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 64)} />
@@ -261,7 +261,7 @@ export default function GradleEditor(props: {
         </Show>
         <EmptyLine />
         <SubmitLine />
-      </div>
-    </form>
+      </form>
+    </Card>
   )
 }

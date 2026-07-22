@@ -21,7 +21,9 @@ export default function App() {
         <div class="gen-editor">
           <GradleEditor onSubmit={handleSubmit} />
         </div>
-        <DescriptionPanel />
+        <div class="gen-docs">
+          <DescriptionPanel />
+        </div>
       </div>
     </main>
   )

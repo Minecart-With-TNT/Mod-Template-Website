@@ -1,26 +1,5 @@
-.panel {
-  width: 500px;
-  flex-shrink: 0;
-  border-radius: 12px;
-  border: 1.5px solid var(--border);
-  font-family: var(--sans);
-  overflow: hidden;
-  position: sticky;
-  top: 24px;
-  align-self: flex-start;
-}
-
-.header {
-  font-family: 'JetBrains Mono', ui-monospace, Consolas, monospace;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text);
-  background: var(--border);
-  padding: 8px 16px;
-  letter-spacing: 0.02em;
-}
-
 .body {
+  font-family: var(--sans);
   background: var(--bg);
   padding: 16px 20px;
   font-size: 13px;

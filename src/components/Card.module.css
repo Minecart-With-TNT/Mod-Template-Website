@@ -1,0 +1,16 @@
+.card {
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  width: 100%;
+  overflow: hidden;
+}
+
+.header {
+  font-family: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  background: var(--border);
+  padding: 8px 16px;
+  letter-spacing: 0.02em;
+}
