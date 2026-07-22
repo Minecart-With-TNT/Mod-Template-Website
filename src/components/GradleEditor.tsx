@@ -50,6 +50,7 @@ function EditLine(props: {
   placeholder: string
   onInput: (v: string) => void
   comment?: string
+  onFocus?: () => void
 }) {
   return (
     <div class={styles.line}>
@@ -62,6 +63,7 @@ function EditLine(props: {
           value={props.value}
           placeholder={props.placeholder}
           onInput={e => props.onInput(e.currentTarget.value)}
+          onFocus={props.onFocus}
           autocomplete="off"
           spellcheck={false}
         />
@@ -75,7 +77,7 @@ function EditLine(props: {
 
 // ── Loader picker ───────────────────────────────────────────────────────
 
-function LoaderLine(props: { value: Loader; onChange: (l: Loader) => void }) {
+function LoaderLine(props: { value: Loader; onChange: (l: Loader) => void; onFocus?: () => void }) {
   return (
     <div class={`${styles.line} ${styles.loaderLine}`}>
       <span class={styles.key}>mod_loader</span>
@@ -92,6 +94,7 @@ function LoaderLine(props: { value: Loader; onChange: (l: Loader) => void }) {
                 [styles.loaderChipActive]: props.value === l.id,
               }}
               onClick={() => props.onChange(l.id)}
+              onFocus={props.onFocus}
             >
               {l.label}
             </button>
@@ -124,6 +127,7 @@ export default function GradleEditor(props: {
   neoforgeVersion: Resource<string | null>
   forgeVersion: Resource<string | null>
   onSubmit?: () => void
+  onFieldFocus?: (id: string) => void
 }) {
   const defaults = () => deriveDefaults(props.form)
 
@@ -238,18 +242,19 @@ export default function GradleEditor(props: {
       <div class={styles.fileHeader}>gradle.properties</div>
       <div class={styles.body}>
         <CommentLine text="Mod Properties" />
-        <EditLine propKey="mod_name"    value={props.form.modName}        placeholder={defaults().modName}        onInput={v => props.setForm('modName', v)} />
-        <EditLine propKey="mod_id"      value={props.form.modId}          placeholder={defaults().modId}          onInput={handleModId} comment="a-z 0-9 _ -" />
-        <EditLine propKey="mod_version" value={props.form.modVersion}     placeholder={defaults().modVersion}     onInput={v => props.setForm('modVersion', v)} />
-        <EditLine propKey="mod_authors" value={props.form.authors}        placeholder={defaults().authors}        onInput={v => props.setForm('authors', v)} comment="comma separated" />
-        <EditLine propKey="maven_group" value={props.form.projectPackage} placeholder={defaults().projectPackage} onInput={v => props.setForm('projectPackage', v)} />
+        <EditLine propKey="mod_name"    value={props.form.modName}        placeholder={defaults().modName}        onInput={v => props.setForm('modName', v)}        onFocus={() => props.onFieldFocus?.('mod_name')} />
+        <EditLine propKey="mod_id"      value={props.form.modId}          placeholder={defaults().modId}          onInput={handleModId}                              onFocus={() => props.onFieldFocus?.('mod_id')} />
+        <EditLine propKey="mod_version" value={props.form.modVersion}     placeholder={defaults().modVersion}     onInput={v => props.setForm('modVersion', v)}     onFocus={() => props.onFieldFocus?.('mod_version')} />
+        <EditLine propKey="mod_authors" value={props.form.authors}        placeholder={defaults().authors}        onInput={v => props.setForm('authors', v)}        onFocus={() => props.onFieldFocus?.('mod_authors')} />
+        <EditLine propKey="maven_group" value={props.form.projectPackage} placeholder={defaults().projectPackage} onInput={v => props.setForm('projectPackage', v)} onFocus={() => props.onFieldFocus?.('maven_group')} />
         <EmptyLine />
         <CommentLine text="Dependencies" />
         <VersionPicker
           value={props.form.mcVersion}
           setValue={v => props.setForm('mcVersion', v)}
+          onFocus={() => props.onFieldFocus?.('minecraft_version')}
         />
-        <LoaderLine value={props.form.loader} onChange={l => props.setForm('loader', l)} />
+        <LoaderLine value={props.form.loader} onChange={l => props.setForm('loader', l)} onFocus={() => props.onFieldFocus?.('mod_loader')} />
         <Show when={needsFabric(props.form)}>
           <ResourceLine propKey="fabric_loader_version" resource={props.fabricLoaderVersion} />
           <ResourceLine propKey="fabric_api_version"    resource={props.fabricApiVersion} />

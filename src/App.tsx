@@ -1,11 +1,14 @@
-import { createResource } from 'solid-js'
+import { createResource, createSignal } from 'solid-js'
 import { createStore } from 'solid-js/store'
 import './App.css'
 import { getNeoforgeVersion, getForgeVersion, getFabricLoaderVerison, getFabricApiVersion } from './core/versionFetch'
 import { type FormState, needsFabric, needsNeoForge, needsForge } from './core'
 import GradleEditor from './components/GradleEditor'
+import DescriptionPanel from './components/DescriptionPanel'
 
 export default function App() {
+  const [activeField, setActiveField] = createSignal('welcome')
+
   const [form, setForm] = createStore<FormState>({
     mcVersion: '',
     modName: '',
@@ -44,15 +47,19 @@ export default function App() {
       </header>
 
       <div class="gen-layout">
-        <GradleEditor
-          form={form}
-          setForm={setForm}
-          fabricLoaderVersion={fabricLoaderVersion}
-          fabricApiVersion={fabricApiVersion}
-          neoforgeVersion={neoforgeVersion}
-          forgeVersion={forgeVersion}
-          onSubmit={handleSubmit}
-        />
+        <div class="gen-editor">
+          <GradleEditor
+            form={form}
+            setForm={setForm}
+            fabricLoaderVersion={fabricLoaderVersion}
+            fabricApiVersion={fabricApiVersion}
+            neoforgeVersion={neoforgeVersion}
+            forgeVersion={forgeVersion}
+            onSubmit={handleSubmit}
+            onFieldFocus={setActiveField}
+          />
+        </div>
+        <DescriptionPanel fieldId={activeField()} loader={form.loader} />
       </div>
     </main>
   )

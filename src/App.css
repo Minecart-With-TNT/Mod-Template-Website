@@ -20,7 +20,27 @@
 
 .gen-layout {
   width: 100%;
-  max-width: 600px;
+  max-width: 980px;
   padding: 0 16px;
   box-sizing: border-box;
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.gen-editor {
+  flex: 1;
+  min-width: 0;
+  max-width: 600px;
+}
+
+@media (max-width: 720px) {
+  .gen-layout {
+    flex-direction: column;
+  }
+
+  .gen-editor {
+    max-width: 100%;
+    width: 100%;
+  }
 }

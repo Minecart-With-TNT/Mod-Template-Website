@@ -5,6 +5,7 @@ import styles from './GradleEditor.module.css';
 export function VersionPicker(props: {
   value: string;
   setValue: (v: string) => void;
+  onFocus?: () => void;
 }) {
   // ── state ──────────────────────────────────────────────────────────────
   const [open, setOpen]           = createSignal(false);
@@ -16,17 +17,8 @@ export function VersionPicker(props: {
   let inputEl!: HTMLInputElement;
   let openOnFocus  = false;  // only open on focus when preceded by a click
   let suppressOpen = false;  // set by Escape; cleared by click or Ctrl+Space
-  let ctrlSpaceAt  = 0;      // ms timestamp — guards blur that OS triggers on Ctrl+Space
 
   onMount(() => {
-    // Capture-phase listener sets ctrlSpaceAt at the earliest possible moment,
-    // before the OS IME switcher can steal focus and fire blur.
-    function captureCtrlSpace(e: KeyboardEvent) {
-      if (e.ctrlKey && e.code === 'Space') ctrlSpaceAt = Date.now();
-    }
-    window.addEventListener('keydown', captureCtrlSpace, true);
-    onCleanup(() => window.removeEventListener('keydown', captureCtrlSpace, true));
-
     // Close dropdown when focus moves to any element outside this component.
     // Using focusin (not blur) avoids false-closes from OS IME focus-steals.
     function onDocFocusIn(e: FocusEvent) {
@@ -91,6 +83,7 @@ export function VersionPicker(props: {
   }
 
   function onFocus() {
+    props.onFocus?.()
     if (openOnFocus) {
       openOnFocus = false;
       setOpen(true);
@@ -107,7 +100,6 @@ export function VersionPicker(props: {
     if (e.ctrlKey && e.code === 'Space') {
       e.preventDefault();
       e.stopPropagation();  // stop form-level nav handler from seeing this
-      ctrlSpaceAt  = Date.now();
       suppressOpen = false;
       if (open()) setSnapshots(s => !s);
       else setOpen(true);
