@@ -19,20 +19,30 @@
 
 .body {
   background: var(--code-bg);
-  padding: 12px 24px;
+  padding: 12px 0;
   overflow-x: auto;
+  counter-reset: line-number;
 }
 
 .line {
-  display: flex;
-  align-items: baseline;
   font-size: 12px;
-  line-height: 1.5;
-  white-space: nowrap;
+  line-height: 18px;
+  min-height: 18px;
+  counter-increment: line-number;
+  padding-right: 24px;
+  padding-left: 32px;
+  position: relative;
 }
 
-.blank {
-  height: 0.9em;
+.line::before {
+  position: absolute;
+  left: 0;
+  display: inline-block;
+  content: counter(line-number);
+  width: 24px;
+  text-align: right;
+  color: var(--border);
+  user-select: none;
 }
 
 .comment {
@@ -51,17 +61,12 @@
   color: var(--prop-val);
 }
 
-.loading {
-  color: var(--text);
-  font-style: italic;
-}
-
 .placeholder {
-  color: var(--border);
+  color: var(--prop-comment);
 }
 
-.unavail {
-  color: var(--text);
-  opacity: 0.5;
-  font-style: italic;
+.val, .placeholder {
+  overflow-wrap: anywhere;
+  word-break: break-all; 
+  margin-left: auto;     
 }

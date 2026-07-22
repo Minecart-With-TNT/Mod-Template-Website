@@ -131,7 +131,7 @@ export default function Form(props: {
             placeholder={defaults().modId}
             value={props.form.modId}
             onInput={e => handleModIdChange(e.currentTarget.value)}
-            pattern="[a-z0-9_-]*"
+            pattern="[-a-z0-9_]*"
           />
         </div>
       </div>
