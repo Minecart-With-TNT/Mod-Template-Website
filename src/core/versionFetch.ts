@@ -92,9 +92,18 @@ async function fetchJson(url: string): Promise<any> {
   return await res.json();
 }
 
-const MINECRAFT_VERSIONS: Promise<MinecraftVersions> = fetchJson(URL_VERSIONS_MINECRAFT);
-const NEOFORGE_VERSIONS: Promise<NeoforgeVersions> = fetchJson(URL_VERSIONS_NEOFORGE);
-const FORGE_PROMOTIONS: Promise<ForgePromotions> = fetchJson(URL_VERSIONS_FORGE);
+const MINECRAFT_VERSIONS: Promise<MinecraftVersions> = fetchJson(URL_VERSIONS_MINECRAFT).catch(error => {
+  console.error('Failed to fetch Minecraft versions:', error);
+  return { versions: [] };
+});
+const NEOFORGE_VERSIONS: Promise<NeoforgeVersions> = fetchJson(URL_VERSIONS_NEOFORGE).catch(error => {
+  console.error('Failed to fetch NeoForge versions:', error);
+  return { versions: [] };
+});
+const FORGE_PROMOTIONS: Promise<ForgePromotions> = fetchJson(URL_VERSIONS_FORGE).catch(error => {
+  console.error('Failed to fetch Forge promotions:', error);
+  return { promos: {} };
+});
 const FABRIC_VERSIONS: { [mc: string]: Promise<string | null> } = {};
 const FABRIC_API_VERSIONS: { [mc: string]: Promise<string | null> } = {};
 
@@ -123,7 +132,10 @@ export function getFabricLoaderVerison(mc: string): Promise<string | null> {
     return Promise.resolve(null);
   }
   if (!FABRIC_VERSIONS[mc]) {
-    FABRIC_VERSIONS[mc] = fetchJson(`${URL_VERSIONS_FABRIC}${encodeURIComponent(mc)}`).then(resolveLatestFabricLoader);
+    FABRIC_VERSIONS[mc] = fetchJson(`${URL_VERSIONS_FABRIC}${encodeURIComponent(mc)}`).then(resolveLatestFabricLoader).catch(error => {
+      console.error('Failed to resolve Fabric loader for Minecraft version:', mc, error);
+      return null;
+    });
   }
   return FABRIC_VERSIONS[mc];
 }
@@ -135,7 +147,11 @@ export function getFabricApiVersion(mc: string): Promise<string | null> {
     params.set('game_versions', JSON.stringify([mc]));
     params.set('loaders', JSON.stringify(['fabric']));
     FABRIC_API_VERSIONS[mc] = fetchJson(`${URL_VERSIONS_FABRIC_API}?${params}`)
-      .then((versions: ModrinthVersionEntry[]) => versions?.[0]?.version_number ?? null);
+      .then((versions: ModrinthVersionEntry[]) => versions?.[0]?.version_number ?? null)
+      .catch(error => {
+        console.error('Failed to fetch Fabric API versions for Minecraft version:', mc, error);
+        return null;
+      });
   }
   return FABRIC_API_VERSIONS[mc];
 }
