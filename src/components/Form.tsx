@@ -117,7 +117,6 @@ export default function Form(props: {
             placeholder={defaults().modName}
             value={props.form.modName}
             onInput={e => props.setForm('modName', e.currentTarget.value)}
-            required
           />
         </div>
         <div class={styles.field}>
@@ -145,7 +144,6 @@ export default function Form(props: {
             placeholder={defaults().modVersion}
             value={props.form.modVersion}
             onInput={e => props.setForm('modVersion', e.currentTarget.value)}
-            required
           />
         </div>
         <div class={styles.field}>
@@ -159,7 +157,6 @@ export default function Form(props: {
             placeholder={defaults().authors}
             value={props.form.authors}
             onInput={e => props.setForm('authors', e.currentTarget.value)}
-            required
           />
         </div>
       </div>
