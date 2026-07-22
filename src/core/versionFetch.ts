@@ -109,8 +109,13 @@ const FABRIC_API_VERSIONS: { [mc: string]: Promise<string | null> } = {};
 
 // ===== exports ======
 
-export async function getMinecraftVersions(allowSnapshot: boolean = false): Promise<string[]> {
-  return (await MINECRAFT_VERSIONS).versions.filter(v => allowSnapshot || v.type === 'release').map(v => v.id);
+export type McVersion = { value: string; flags: number };
+
+export async function getMinecraftVersions(): Promise<McVersion[]> {
+  return (await MINECRAFT_VERSIONS).versions.map(v => ({
+    value: v.id,
+    flags: (v.type === 'release' ? 1 : 0) | 2,
+  }));
 }
 
 export async function getNeoforgeVersion(mc: string): Promise<string | null> {

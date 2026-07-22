@@ -1,7 +1,7 @@
-import { onMount, For, Show, type Resource } from 'solid-js'
-import { type FormState, type Loader, needsFabric, needsNeoForge, needsForge } from '../core'
+import { onMount, createResource, For, Show, type Resource } from 'solid-js'
+import { type FormState, type Loader, needsFabric, needsNeoForge, needsForge, getMinecraftVersions } from '../core'
 import styles from './GradleEditor.module.css'
-import { VersionPicker } from './VersionPicker'
+import { LinePicker } from './LinePicker'
 import { setCurrentDoc, getForm, getDefaults, updateForm } from '../store'
 import type { DocId } from '../docs'
 
@@ -128,6 +128,8 @@ export default function GradleEditor(props: {
   forgeVersion: Resource<string | null>
   onSubmit?: () => void
 }) {
+  const [mcVersions] = createResource(getMinecraftVersions)
+
   let formEl!: HTMLFormElement
 
   onMount(() => {
@@ -242,10 +244,13 @@ export default function GradleEditor(props: {
         <EditLine propKey="maven_group" formKey="projectPackage" docId="maven_group" />
         <EmptyLine />
         <CommentLine text="Dependencies" />
-        <VersionPicker
+        <LinePicker
+          propKey="minecraft_version"
           value={getForm().mcVersion}
           setValue={v => updateForm('mcVersion', v)}
           onFocus={() => setCurrentDoc('minecraft_version')}
+          items={mcVersions}
+          placeholder="e.g. 1.21.1"
         />
         <LoaderLine value={getForm().loader} onChange={l => { updateForm('loader', l); setCurrentDoc(`loader_${l}`) }} onFocus={() => setCurrentDoc(`loader_${getForm().loader}`)} />
         <Show when={needsFabric(getForm())}>

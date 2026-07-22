@@ -1,26 +1,31 @@
-import { createSignal, createEffect, createResource, onMount, onCleanup, untrack, For, Show, Suspense } from 'solid-js';
-import { getMinecraftVersions } from '../core';
+import { createSignal, createEffect, onMount, onCleanup, untrack, For, Show, type Resource } from 'solid-js';
+import type { McVersion } from '../core';
 import styles from './GradleEditor.module.css';
 
-export function VersionPicker(props: {
+const DEFAULT_FLAGS = ['Releases', 'Snapshots'];
+
+export function LinePicker(props: {
+  propKey: string;
   value: string;
   setValue: (v: string) => void;
   onFocus?: () => void;
+  items: Resource<McVersion[]>;
+  flags?: string[];
+  placeholder?: string;
 }) {
-  // ── state ──────────────────────────────────────────────────────────────
+  const flagsArr = () => props.flags ?? DEFAULT_FLAGS;
+
   const [open, setOpen]           = createSignal(false);
-  const [snapshots, setSnapshots] = createSignal(false);
+  const [flagIndex, setFlagIndex] = createSignal(0);
   const [cursor, setCursor]       = createSignal(0);
 
   let listEl!: HTMLUListElement;
   let wrapperEl!: HTMLDivElement;
   let inputEl!: HTMLInputElement;
-  let openOnFocus  = false;  // only open on focus when preceded by a click
-  let suppressOpen = false;  // set by Escape; cleared by click or Ctrl+Space
+  let openOnFocus  = false;
+  let suppressOpen = false;
 
   onMount(() => {
-    // Close dropdown when focus moves to any element outside this component.
-    // Using focusin (not blur) avoids false-closes from OS IME focus-steals.
     function onDocFocusIn(e: FocusEvent) {
       const t = e.target as Node;
       if (t !== inputEl && !wrapperEl?.contains(t)) setOpen(false);
@@ -29,29 +34,21 @@ export function VersionPicker(props: {
     onCleanup(() => document.removeEventListener('focusin', onDocFocusIn));
   });
 
-  // ── data ───────────────────────────────────────────────────────────────
-  const [versions] = createResource(
-    () => snapshots() ? 'all' : 'releases',
-    mode => getMinecraftVersions(mode === 'all'),
-  );
-
   const options = () => {
-    const q   = props.value.toLowerCase().trim();
-    const all = versions() ?? [];
-    if (!q) return all;
-    return all.filter(v => v.includes(q));
+    const q       = props.value.toLowerCase().trim();
+    const all     = props.items() ?? [];
+    const mask    = 1 << flagIndex();
+    const visible = all.filter(item => (item.flags & mask) !== 0);
+    if (!q) return visible;
+    return visible.filter(item => item.value.includes(q));
   };
 
-  // ── sync ───────────────────────────────────────────────────────────────
-
-  // Keep keyboard cursor on the selected item when options change.
   createEffect(() => {
     const list = options();
-    const idx  = list.indexOf(untrack(() => props.value));
+    const idx  = list.findIndex(item => item.value === untrack(() => props.value));
     setCursor(idx >= 0 ? idx : 0);
   });
 
-  // Scroll cursor into view by directly manipulating scrollTop.
   createEffect(() => {
     const idx = cursor();
     if (!open()) return;
@@ -68,14 +65,10 @@ export function VersionPicker(props: {
     });
   });
 
-  // ── actions ────────────────────────────────────────────────────────────
-
   function choose(v: string) {
     props.setValue(v);
     setOpen(false);
   }
-
-  // ── native event handlers (on: prefix = no SolidJS delegation) ─────────
 
   function onMouseDown() {
     openOnFocus  = true;
@@ -83,7 +76,7 @@ export function VersionPicker(props: {
   }
 
   function onFocus() {
-    props.onFocus?.()
+    props.onFocus?.();
     if (openOnFocus) {
       openOnFocus = false;
       setOpen(true);
@@ -96,18 +89,16 @@ export function VersionPicker(props: {
   }
 
   function onKeyDown(e: KeyboardEvent) {
-    // ── Ctrl+Space: open or toggle snapshots ──────────────────────────
     if (e.ctrlKey && e.code === 'Space') {
       e.preventDefault();
-      e.stopPropagation();  // stop form-level nav handler from seeing this
+      e.stopPropagation();
       suppressOpen = false;
-      if (open()) setSnapshots(s => !s);
+      if (open()) setFlagIndex(i => (i + 1) % flagsArr().length);
       else setOpen(true);
       setTimeout(() => inputEl?.focus());
       return;
     }
 
-    // ── Escape: close and suppress re-open until click or Ctrl+Space ──
     if (e.key === 'Escape') {
       e.preventDefault();
       setOpen(false);
@@ -115,16 +106,14 @@ export function VersionPicker(props: {
       return;
     }
 
-    if (!open()) return;  // all remaining keys only apply when dropdown is open
+    if (!open()) return;
 
-    // ── Space: swallow — prevents OS from sending a stray Space after Ctrl+Space ──
     if (e.code === 'Space') {
       e.preventDefault();
       e.stopPropagation();
       return;
     }
 
-    // ── Arrow navigation within list ──────────────────────────────────
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       e.stopPropagation();
@@ -139,33 +128,31 @@ export function VersionPicker(props: {
       return;
     }
 
-    // ── Enter: select highlighted item ────────────────────────────────
     if (e.key === 'Enter') {
       e.preventDefault();
       e.stopPropagation();
       const item = options()[cursor()];
-      if (item) choose(item);
+      if (item) choose(item.value);
       return;
     }
-
-    // ArrowLeft / ArrowRight: fall through so form-level nav can handle them
   }
-
-  // ── render ─────────────────────────────────────────────────────────────
 
   return (
     <div class={styles.line}>
-      <span class={styles.key}>minecraft_version</span>
+      <span class={styles.key}>{props.propKey}</span>
       <span class={styles.eq}>=</span>
       <span class={styles.editCell}>
-        <Suspense fallback={<span class={styles.placeholder}>loading...</span>}>
+        <Show
+          when={!props.items.loading}
+          fallback={<span class={styles.placeholder}>loading...</span>}
+        >
           <span class={styles.comboWrap}>
             <input
               ref={inputEl}
               type="text"
               class={styles.inlineInput}
               value={props.value}
-              placeholder="e.g. 1.21.1"
+              placeholder={props.placeholder}
               autocomplete="off"
               spellcheck={false}
               on:mousedown={onMouseDown}
@@ -177,31 +164,33 @@ export function VersionPicker(props: {
               <div ref={wrapperEl} class={styles.dropdownWrap}>
                 <ul ref={listEl} class={styles.dropdown}>
                   <For each={options()}>
-                    {(v, i) => (
+                    {(item, i) => (
                       <li
                         classList={{
-                          [styles.activeOption]:      props.value === v,
+                          [styles.activeOption]:      props.value === item.value,
                           [styles.highlightedOption]: i() === cursor(),
                         }}
                         onmousedown={e => { e.preventDefault(); }}
-                        onclick={() => { choose(v); }}
-                      >{v}</li>
+                        onclick={() => { choose(item.value); }}
+                      >{item.value}</li>
                     )}
                   </For>
                 </ul>
                 <div
                   class={styles.dropdownFooter}
                   onmousedown={e => { e.preventDefault(); }}
-                  onclick={() => { setSnapshots(s => !s); setTimeout(() => inputEl?.focus()); }}
+                  onclick={() => {
+                    setFlagIndex(i => (i + 1) % flagsArr().length);
+                    setTimeout(() => inputEl?.focus());
+                  }}
                 >
-                  <input type="checkbox" checked={snapshots()} readOnly />
-                  <span>Include snapshots</span>
+                  <span>{flagsArr()[flagIndex()]}</span>
                   <kbd class={styles.kbd}>Ctrl+Space</kbd>
                 </div>
               </div>
             </Show>
           </span>
-        </Suspense>
+        </Show>
       </span>
     </div>
   );
