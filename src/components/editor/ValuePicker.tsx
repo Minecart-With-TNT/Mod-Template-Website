@@ -1,6 +1,22 @@
-import { createSignal, createEffect, onMount, onCleanup, untrack, For, Show, type Resource } from 'solid-js';
+import { createSignal, createEffect, onMount, onCleanup, untrack, For, Show, type Resource, type JSX } from 'solid-js';
+import { Portal } from 'solid-js/web';
 import type { McVersion } from '../../core';
 import styles from './GradleEditor.module.css';
+
+const DROPDOWN_GAP = 4;
+const DROPDOWN_MAX = 300;
+const VIEWPORT_PAD = 8;
+
+function viewportBounds() {
+  const vv = window.visualViewport;
+  if (vv) {
+    return {
+      top: vv.offsetTop,
+      bottom: vv.offsetTop + vv.height,
+    };
+  }
+  return { top: 0, bottom: window.innerHeight };
+}
 
 export function ValuePicker(props: {
   value: string,
@@ -16,6 +32,7 @@ export function ValuePicker(props: {
   const [open, setOpen]           = createSignal(false);
   const [flagIndex, setFlagIndex] = createSignal(0);
   const [cursor, setCursor]       = createSignal(0);
+  const [dropdownStyle, setDropdownStyle] = createSignal<JSX.CSSProperties>({});
 
   let listEl!: HTMLUListElement;
   let wrapperEl!: HTMLDivElement;
@@ -30,6 +47,57 @@ export function ValuePicker(props: {
     }
     document.addEventListener('focusin', onDocFocusIn);
     onCleanup(() => document.removeEventListener('focusin', onDocFocusIn));
+  });
+
+  function updatePosition() {
+    if (!inputEl) return;
+    const vp = viewportBounds();
+    const rect = inputEl.getBoundingClientRect();
+    const spaceBelow = vp.bottom - rect.bottom - DROPDOWN_GAP - VIEWPORT_PAD;
+    const spaceAbove = rect.top - vp.top - DROPDOWN_GAP - VIEWPORT_PAD;
+
+    // Prefer the side that can fit the ideal height; otherwise the roomier side.
+    const placeBelow =
+      spaceBelow >= DROPDOWN_MAX ? true :
+      spaceAbove >= DROPDOWN_MAX ? false :
+      spaceBelow >= spaceAbove;
+
+    const maxH = Math.min(DROPDOWN_MAX, Math.max(0, placeBelow ? spaceBelow : spaceAbove));
+
+    if (placeBelow) {
+      setDropdownStyle({
+        top: `${rect.bottom + DROPDOWN_GAP}px`,
+        bottom: 'auto',
+        left: `${rect.left}px`,
+        '--dropdown-max-height': `${maxH}px`,
+      });
+    } else {
+      setDropdownStyle({
+        top: 'auto',
+        bottom: `${window.innerHeight - rect.top + DROPDOWN_GAP}px`,
+        left: `${rect.left}px`,
+        '--dropdown-max-height': `${maxH}px`,
+      });
+    }
+  }
+
+  createEffect(() => {
+    if (!open()) return;
+    updatePosition();
+    // Remeasure after paint once the portal content has real height.
+    const raf = requestAnimationFrame(() => updatePosition());
+    const onReposition = () => updatePosition();
+    window.addEventListener('resize', onReposition);
+    window.addEventListener('scroll', onReposition, true);
+    window.visualViewport?.addEventListener('resize', onReposition);
+    window.visualViewport?.addEventListener('scroll', onReposition);
+    onCleanup(() => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('resize', onReposition);
+      window.removeEventListener('scroll', onReposition, true);
+      window.visualViewport?.removeEventListener('resize', onReposition);
+      window.visualViewport?.removeEventListener('scroll', onReposition);
+    });
   });
 
   const options = () => {
@@ -65,6 +133,11 @@ export function ValuePicker(props: {
     });
   });
 
+  function openDropdown() {
+    updatePosition();
+    setOpen(true);
+  }
+
   function choose(v: string) {
     props.setValue(v);
     setOpen(false);
@@ -79,13 +152,13 @@ export function ValuePicker(props: {
     props.onFocus?.();
     if (openOnFocus) {
       openOnFocus = false;
-      setOpen(true);
+      openDropdown();
     }
   }
 
   function onInput(e: Event) {
     props.setValue((e.target as HTMLInputElement).value);
-    if (!suppressOpen) setOpen(true);
+    if (!suppressOpen) openDropdown();
   }
 
   function onKeyDown(e: KeyboardEvent) {
@@ -95,7 +168,7 @@ export function ValuePicker(props: {
       suppressOpen = false;
       const flags = flagsArr();
       if (flags && flags.length > 1 && open()) setFlagIndex(i => (i + 1) % flags.length);
-      else setOpen(true);
+      else openDropdown();
       setTimeout(() => inputEl?.focus());
       return;
     }
@@ -159,36 +232,38 @@ export function ValuePicker(props: {
             on:keydown={onKeyDown}
           />
           <Show when={open()}>
-            <div ref={wrapperEl} class={styles.dropdownWrap}>
-              <ul ref={listEl} class={styles.dropdown}>
-                <For each={options()}>
-                  {(item, i) => (
-                    <li
-                      classList={{
-                        [styles.activeOption]:      props.value === item.value,
-                        [styles.highlightedOption]: i() === cursor(),
-                      }}
-                      onmousedown={e => { e.preventDefault(); }}
-                      onclick={() => { choose(item.value); }}
-                    >{item.value}</li>
-                  )}
-                </For>
-              </ul>
-              <Show when={hasFlagFilter()}>
-                <div
-                  class={styles.dropdownFooter}
-                  onmousedown={e => { e.preventDefault(); }}
-                  onclick={() => {
-                    const flags = flagsArr()!;
-                    setFlagIndex(i => (i + 1) % flags.length);
-                    setTimeout(() => inputEl?.focus());
-                  }}
-                >
-                  <span>{flagsArr()![flagIndex()]}</span>
-                  <kbd class={styles.kbd}>Ctrl+Space</kbd>
-                </div>
-              </Show>
-            </div>
+            <Portal>
+              <div ref={wrapperEl} class={styles.dropdownWrap} style={dropdownStyle()}>
+                <ul ref={listEl} class={styles.dropdown}>
+                  <For each={options()}>
+                    {(item, i) => (
+                      <li
+                        classList={{
+                          [styles.activeOption]:      props.value === item.value,
+                          [styles.highlightedOption]: i() === cursor(),
+                        }}
+                        onmousedown={e => { e.preventDefault(); }}
+                        onclick={() => { choose(item.value); }}
+                      >{item.value}</li>
+                    )}
+                  </For>
+                </ul>
+                <Show when={hasFlagFilter()}>
+                  <div
+                    class={styles.dropdownFooter}
+                    onmousedown={e => { e.preventDefault(); }}
+                    onclick={() => {
+                      const flags = flagsArr()!;
+                      setFlagIndex(i => (i + 1) % flags.length);
+                      setTimeout(() => inputEl?.focus());
+                    }}
+                  >
+                    <span>{flagsArr()![flagIndex()]}</span>
+                    <kbd class={styles.kbd}>Ctrl+Space</kbd>
+                  </div>
+                </Show>
+              </div>
+            </Portal>
           </Show>
         </span>
       </Show>

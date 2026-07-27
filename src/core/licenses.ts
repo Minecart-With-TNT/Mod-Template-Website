@@ -1,6 +1,6 @@
 import type { McVersion } from './versionFetch';
 
-const URL_LICENSES = 'https://api.github.com/licenses?per_page=100';
+const URL_LICENSES = './licenses.json';
 
 type GithubLicense = {
   key: string,
@@ -8,13 +8,8 @@ type GithubLicense = {
 };
 
 async function fetchLicenses(): Promise<GithubLicense[]> {
-  const res = await fetch(URL_LICENSES, {
-    headers: {
-      Accept: 'application/vnd.github+json',
-      'X-GitHub-Api-Version': '2026-03-10',
-    },
-  });
-  if (!res.ok) throw new Error(`GitHub licenses API failed: ${res.status}`);
+  const res = await fetch(URL_LICENSES);
+  if (!res.ok) throw new Error(`Licenses fetch failed: ${res.status}`);
   return res.json();
 }
 
