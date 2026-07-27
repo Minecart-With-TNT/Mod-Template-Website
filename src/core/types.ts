@@ -12,4 +12,7 @@ export type FormState = {
   // dependencies
   mcVersion: string,
   loader: Loader,
+  // template options
+  separateClient: boolean,
+  useMixin: boolean,
 };

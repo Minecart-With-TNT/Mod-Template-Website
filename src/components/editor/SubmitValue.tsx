@@ -2,7 +2,7 @@ import { Chip } from './Chip';
 
 export function SubmitValue() {
   return (
-    <Chip type="submit" active data-generate-btn>
+    <Chip type="submit" kind="accent" data-generate-btn>
       generate_template
     </Chip>
   );

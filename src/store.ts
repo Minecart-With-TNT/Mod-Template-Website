@@ -19,6 +19,8 @@ const [store, setStore] = createStore<State>({
     loader: 'fabric',
     projectPackage: '',
     license: '',
+    separateClient: false,
+    useMixin: true,
   },
 });
 

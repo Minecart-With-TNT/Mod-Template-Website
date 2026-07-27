@@ -6,6 +6,7 @@ import { Line } from './Line';
 import { ValuePicker } from './ValuePicker';
 import { EditValue } from './EditValue';
 import { ChipSelection, type ChipOption } from './ChipSelection';
+import { BoolValue } from './BoolValue';
 import { ResourceValue } from './ResourceValue';
 import { SubmitValue } from './SubmitValue';
 import { setCurrentDoc, getForm, getDefaults, updateForm, fabricLoaderVersion, fabricApiVersion, neoforgeVersion, forgeVersion } from '../../store';
@@ -167,6 +168,22 @@ export default function GradleEditor(props: {
         <Show when={needsForge(getDefaults())}>
           <Line key="forge_version"><ResourceValue resource={forgeVersion} /></Line>
         </Show>
+        <Line />
+        <Line comment="Template Options" />
+        <Line key="separate_client">
+          <BoolValue
+            value={getForm().separateClient}
+            onChange={v => updateForm('separateClient', v)}
+            onFocus={() => setCurrentDoc('separate_client')}
+          />
+        </Line>
+        <Line key="use_mixin">
+          <BoolValue
+            value={getForm().useMixin}
+            onChange={v => updateForm('useMixin', v)}
+            onFocus={() => setCurrentDoc('use_mixin')}
+          />
+        </Line>
         <Line />
         <Line><SubmitValue /></Line>
       </form>

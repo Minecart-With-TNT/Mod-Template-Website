@@ -3,7 +3,10 @@ import { setCurrentDoc, getForm, getDefaults, updateForm } from '../../store';
 import type { DocId } from '../../docs';
 import styles from './common.module.css';
 
-type StringFormKey = Exclude<keyof FormState, 'loader'>;
+type StringFormKey = Exclude<
+  { [K in keyof FormState]: FormState[K] extends string ? K : never }[keyof FormState],
+  'loader'
+>;
 
 export function EditValue(props: {
   formKey: StringFormKey,

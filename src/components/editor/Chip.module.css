@@ -1,8 +1,6 @@
 .chip {
   font: inherit;
   font-size: 12px;
-  color: var(--prop-comment);
-  background: var(--border);
   border: none;
   border-radius: 1000px;
   padding: 0 8px;
@@ -10,6 +8,11 @@
   line-height: 20px;
   outline: none;
   transition: color 0.15s, border-color 0.15s, background 0.15s, opacity 0.15s;
+}
+
+.dull {
+  color: var(--prop-comment);
+  background: var(--border);
 
   &:hover {
     color: var(--text-h);
@@ -17,10 +20,30 @@
   }
 }
 
-.active {
+.accent {
   color: var(--accent);
   background: var(--accent-bg);
   outline: var(--accent) 1px solid;
+
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+.true {
+  color: var(--prop-val);
+  background: color-mix(in srgb, var(--prop-val) 15%, transparent);
+  outline: var(--prop-val) 1px solid;
+
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+.false {
+  color: #c45c5c;
+  background: color-mix(in srgb, #c45c5c 15%, transparent);
+  outline: #c45c5c 1px solid;
 
   &:hover {
     opacity: 0.8;

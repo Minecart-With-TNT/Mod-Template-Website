@@ -1,10 +1,12 @@
 import { For } from 'solid-js';
-import { Chip } from './Chip';
+import { Chip, type ChipKind } from './Chip';
 import styles from './ChipSelection.module.css';
 
 export type ChipOption<T extends string = string> = {
   id: T,
   label: string,
+  /** Kind used when this option is selected. Defaults to `accent`. */
+  kind?: ChipKind,
 };
 
 export function ChipSelection<T extends string>(props: {
@@ -20,7 +22,7 @@ export function ChipSelection<T extends string>(props: {
           <Chip
             data-chip-option
             data-active={props.value === opt.id ? '' : undefined}
-            active={props.value === opt.id}
+            kind={props.value === opt.id ? (opt.kind ?? 'accent') : 'dull'}
             onClick={() => props.onChange(opt.id)}
             onFocus={props.onFocus}
           >
