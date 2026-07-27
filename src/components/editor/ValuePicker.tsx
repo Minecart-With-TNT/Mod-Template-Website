@@ -1,7 +1,8 @@
 import { createSignal, createEffect, onMount, onCleanup, untrack, For, Show, type Resource, type JSX } from 'solid-js';
 import { Portal } from 'solid-js/web';
 import type { McVersion } from '../../core';
-import styles from './GradleEditor.module.css';
+import common from './common.module.css';
+import styles from './ValuePicker.module.css';
 
 const DROPDOWN_GAP = 4;
 const DROPDOWN_MAX = 300;
@@ -212,16 +213,16 @@ export function ValuePicker(props: {
   }
 
   return (
-    <span class={styles.editCell}>
+    <span class={common.editCell}>
       <Show
         when={!props.items.loading}
-        fallback={<span class={styles.placeholder}>loading...</span>}
+        fallback={<span class={common.placeholder}>loading...</span>}
       >
         <span class={styles.comboWrap}>
           <input
             ref={inputEl}
             type="text"
-            class={styles.inlineInput}
+            class={common.inlineInput}
             value={props.value}
             placeholder={props.placeholder}
             autocomplete="off"

@@ -1,82 +1,20 @@
-import { onMount, createResource, For, Show, type Resource } from 'solid-js';
+import { onMount, createResource, Show } from 'solid-js';
 import Card from '../Card';
-import { type FormState, type Loader, needsFabric, needsNeoForge, needsForge, getMinecraftVersions, getLicenses } from '../../core';
-import styles from './GradleEditor.module.css';
-import { Chip } from './Chip';
+import { type Loader, needsFabric, needsNeoForge, needsForge, getMinecraftVersions, getLicenses } from '../../core';
+import styles from './common.module.css';
 import { Line } from './Line';
 import { ValuePicker } from './ValuePicker';
+import { EditValue } from './EditValue';
+import { ChipSelection, type ChipOption } from './ChipSelection';
+import { ResourceValue } from './ResourceValue';
+import { SubmitValue } from './SubmitValue';
 import { setCurrentDoc, getForm, getDefaults, updateForm, fabricLoaderVersion, fabricApiVersion, neoforgeVersion, forgeVersion } from '../../store';
-import type { DocId } from '../../docs';
 
-const LOADERS: { id: Loader, label: string }[] = [
+const LOADERS: ChipOption<Loader>[] = [
   { id: 'fabric',       label: 'Fabric'      },
   { id: 'neoforge',    label: 'NeoForge'    },
   { id: 'multiloader', label: 'Multiloader' },
 ];
-
-function ResourceValue(props: { resource: Resource<string | null> }) {
-  return <>{
-    props.resource.loading
-    ? <span class={styles.placeholder}>loading...</span>
-    : props.resource()
-      ? <span class={styles.val}>{props.resource()!}</span>
-      : <span class={styles.placeholder}>unavailable</span>
-  }</>;
-}
-
-type StringFormKey = Exclude<keyof FormState, 'loader'>;
-
-function EditValue(props: {
-  formKey: StringFormKey,
-  docId: DocId,
-  valueFixer?: (v: string) => string,
-}) {
-  return (
-    <span class={styles.editCell}>
-      <input
-        type="text"
-        class={styles.inlineInput}
-        value={getForm()[props.formKey]}
-        placeholder={getDefaults()[props.formKey]}
-        onInput={e => {
-          const v = e.currentTarget.value;
-          updateForm(props.formKey, props.valueFixer ? props.valueFixer(v) : v);
-        }}
-        onFocus={() => setCurrentDoc(props.docId)}
-        autocomplete="off"
-        spellcheck={false}
-      />
-    </span>
-  );
-}
-
-function LoaderValue(props: { value: Loader, onChange: (l: Loader) => void, onFocus?: () => void }) {
-  return (
-    <span class={styles.chipGroup}>
-      <For each={LOADERS}>
-        {l => (
-          <Chip
-            data-loader-chip
-            data-active={props.value === l.id ? '' : undefined}
-            active={props.value === l.id}
-            onClick={() => props.onChange(l.id)}
-            onFocus={props.onFocus}
-          >
-            {l.label}
-          </Chip>
-        )}
-      </For>
-    </span>
-  );
-}
-
-function SubmitValue() {
-  return (
-    <Chip type="submit" active data-generate-btn>
-      generate_template
-    </Chip>
-  );
-}
 
 export default function GradleEditor(props: {
   onSubmit?: () => void,
@@ -97,8 +35,18 @@ export default function GradleEditor(props: {
 
   function getNavItems(form: HTMLFormElement): HTMLElement[] {
     return Array.from(form.querySelectorAll<HTMLElement>(
-      'input[type="text"], [data-loader-chip][data-active], [data-generate-btn]'
+      'input[type="text"], [data-chip-option][data-active], [data-generate-btn]'
     ));
+  }
+
+  function navIndex(form: HTMLFormElement, target: HTMLElement, isChip: boolean): number {
+    const navItems = getNavItems(form);
+    const direct = navItems.indexOf(target);
+    if (direct >= 0) return direct;
+    if (!isChip) return -1;
+    const active = target.closest('[data-chip-selection]')
+      ?.querySelector<HTMLElement>('[data-chip-option][data-active]');
+    return active ? navItems.indexOf(active) : -1;
   }
 
   function focusEl(el: HTMLElement, atEnd: boolean) {
@@ -112,7 +60,7 @@ export default function GradleEditor(props: {
   function handleEditorKeyDown(e: KeyboardEvent) {
     const target = e.target as HTMLElement;
     const isInput = target instanceof HTMLInputElement && target.type === 'text';
-    const isChip = 'loaderChip' in target.dataset;
+    const isChip = 'chipOption' in target.dataset;
     const isGenerate = 'generateBtn' in target.dataset;
     if (!isInput && !isChip && !isGenerate) return;
 
@@ -121,15 +69,14 @@ export default function GradleEditor(props: {
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       const goDown = e.key === 'ArrowDown';
       const navItems = getNavItems(form);
-      const idx = isChip
-        ? navItems.findIndex(el => 'loaderChip' in el.dataset)
-        : navItems.indexOf(target);
-      const next = navItems[idx + (goDown ? 1 : -1)];
+      const next = navItems[navIndex(form, target, isChip) + (goDown ? 1 : -1)];
       if (next) { e.preventDefault(); focusEl(next, !goDown); }
     } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
       const goRight = e.key === 'ArrowRight';
       if (isChip) {
-        const chips = Array.from(form.querySelectorAll<HTMLElement>('[data-loader-chip]'));
+        const group = target.closest('[data-chip-selection]');
+        if (!group) return;
+        const chips = Array.from(group.querySelectorAll<HTMLElement>('[data-chip-option]'));
         const next = chips[chips.indexOf(target) + (goRight ? 1 : -1)];
         if (next) { e.preventDefault(); next.click(); next.focus(); }
       } else if (isInput) {
@@ -148,10 +95,7 @@ export default function GradleEditor(props: {
       if (isInput || isChip) {
         e.preventDefault();
         const navItems = getNavItems(form);
-        const idx = isChip
-          ? navItems.findIndex(el => 'loaderChip' in el.dataset)
-          : navItems.indexOf(target);
-        const next = navItems[idx + 1];
+        const next = navItems[navIndex(form, target, isChip) + 1];
         if (next) focusEl(next, false);
       }
       // isGenerate: let browser submit normally
@@ -206,7 +150,12 @@ export default function GradleEditor(props: {
           />
         </Line>
         <Line key="mod_loader">
-          <LoaderValue value={getForm().loader} onChange={l => { updateForm('loader', l); setCurrentDoc(`loader_${l}`); }} onFocus={() => setCurrentDoc(`loader_${getForm().loader}`)} />
+          <ChipSelection
+            value={getForm().loader}
+            options={LOADERS}
+            onChange={l => { updateForm('loader', l); setCurrentDoc(`loader_${l}`); }}
+            onFocus={() => setCurrentDoc(`loader_${getForm().loader}`)}
+          />
         </Line>
         <Show when={needsFabric(getDefaults())}>
           <Line key="fabric_loader_version"><ResourceValue resource={fabricLoaderVersion} /></Line>

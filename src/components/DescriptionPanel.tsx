@@ -4,10 +4,10 @@ import { markedHighlight } from 'marked-highlight'
 import hljs from 'highlight.js/lib/core'
 import java from 'highlight.js/lib/languages/java'
 import 'highlight.js/styles/atom-one-dark.min.css'
-import docs from '../../docs'
-import { getCurrentDoc } from '../../store'
+import docs from '../docs'
+import { getCurrentDoc } from '../store'
 import styles from './DescriptionPanel.module.css'
-import Card from '../Card'
+import Card from './Card'
 
 hljs.registerLanguage('java', java)
 

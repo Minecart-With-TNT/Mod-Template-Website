@@ -1,7 +1,7 @@
-import styles from './App.module.css'
-import { getForm } from '../store'
-import GradleEditor from './editor/GradleEditor'
-import DescriptionPanel from './editor/DescriptionPanel'
+import styles from './App.module.css';
+import { getForm } from '../store';
+import GradleEditor from './editor';
+import DescriptionPanel from './DescriptionPanel';
 
 export default function App() {
 
