@@ -1,5 +1,5 @@
 import { createSignal, createEffect, onMount, onCleanup, untrack, For, Show, type Resource } from 'solid-js';
-import type { McVersion } from '../core';
+import type { McVersion } from '../../core';
 import styles from './GradleEditor.module.css';
 
 const DEFAULT_FLAGS = ['Releases', 'Snapshots'];

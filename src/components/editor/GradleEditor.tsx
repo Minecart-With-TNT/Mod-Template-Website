@@ -1,12 +1,12 @@
 import { onMount, createResource, For, Show, type Resource } from 'solid-js'
-import Card from './Card'
-import { type FormState, type Loader, needsFabric, needsNeoForge, needsForge, getMinecraftVersions } from '../core'
+import Card from '../Card'
+import { type FormState, type Loader, needsFabric, needsNeoForge, needsForge, getMinecraftVersions } from '../../core'
 import styles from './GradleEditor.module.css'
 import { Chip } from './Chip'
 import { Line } from './Line'
 import { ValuePicker } from './ValuePicker'
-import { setCurrentDoc, getForm, getDefaults, updateForm, fabricLoaderVersion, fabricApiVersion, neoforgeVersion, forgeVersion } from '../store'
-import type { DocId } from '../docs'
+import { setCurrentDoc, getForm, getDefaults, updateForm, fabricLoaderVersion, fabricApiVersion, neoforgeVersion, forgeVersion } from '../../store'
+import type { DocId } from '../../docs'
 
 const LOADERS: { id: Loader; label: string }[] = [
   { id: 'fabric',       label: 'Fabric'      },
