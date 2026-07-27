@@ -2,17 +2,16 @@ import { createSignal, createEffect, onMount, onCleanup, untrack, For, Show, typ
 import type { McVersion } from '../../core';
 import styles from './GradleEditor.module.css';
 
-const DEFAULT_FLAGS = ['Releases', 'Snapshots'];
-
 export function ValuePicker(props: {
-  value: string;
-  setValue: (v: string) => void;
-  onFocus?: () => void;
-  items: Resource<McVersion[]>;
-  flags?: string[];
-  placeholder?: string;
+  value: string,
+  setValue: (v: string) => void,
+  onFocus?: () => void,
+  items: Resource<McVersion[]>,
+  flags?: string[],
+  placeholder?: string,
 }) {
-  const flagsArr = () => props.flags ?? DEFAULT_FLAGS;
+  const flagsArr = () => props.flags;
+  const hasFlagFilter = () => (flagsArr()?.length ?? 0) > 0;
 
   const [open, setOpen]           = createSignal(false);
   const [flagIndex, setFlagIndex] = createSignal(0);
@@ -34,12 +33,14 @@ export function ValuePicker(props: {
   });
 
   const options = () => {
-    const q       = props.value.toLowerCase().trim();
-    const all     = props.items() ?? [];
-    const mask    = 1 << flagIndex();
-    const visible = all.filter(item => (item.flags & mask) !== 0);
+    const q   = props.value.toLowerCase().trim();
+    const all = props.items() ?? [];
+    const flags = flagsArr();
+    const visible = flags?.length
+      ? all.filter(item => (item.flags & (1 << flagIndex())) !== 0)
+      : all;
     if (!q) return visible;
-    return visible.filter(item => item.value.includes(q));
+    return visible.filter(item => item.value.toLowerCase().includes(q));
   };
 
   createEffect(() => {
@@ -92,7 +93,8 @@ export function ValuePicker(props: {
       e.preventDefault();
       e.stopPropagation();
       suppressOpen = false;
-      if (open()) setFlagIndex(i => (i + 1) % flagsArr().length);
+      const flags = flagsArr();
+      if (flags && flags.length > 1 && open()) setFlagIndex(i => (i + 1) % flags.length);
       else setOpen(true);
       setTimeout(() => inputEl?.focus());
       return;
@@ -172,17 +174,20 @@ export function ValuePicker(props: {
                   )}
                 </For>
               </ul>
-              <div
-                class={styles.dropdownFooter}
-                onmousedown={e => { e.preventDefault(); }}
-                onclick={() => {
-                  setFlagIndex(i => (i + 1) % flagsArr().length);
-                  setTimeout(() => inputEl?.focus());
-                }}
-              >
-                <span>{flagsArr()[flagIndex()]}</span>
-                <kbd class={styles.kbd}>Ctrl+Space</kbd>
-              </div>
+              <Show when={hasFlagFilter()}>
+                <div
+                  class={styles.dropdownFooter}
+                  onmousedown={e => { e.preventDefault(); }}
+                  onclick={() => {
+                    const flags = flagsArr()!;
+                    setFlagIndex(i => (i + 1) % flags.length);
+                    setTimeout(() => inputEl?.focus());
+                  }}
+                >
+                  <span>{flagsArr()![flagIndex()]}</span>
+                  <kbd class={styles.kbd}>Ctrl+Space</kbd>
+                </div>
+              </Show>
             </div>
           </Show>
         </span>

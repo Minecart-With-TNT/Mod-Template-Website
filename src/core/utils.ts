@@ -1,4 +1,4 @@
-import { type FormState } from './types'
+import { type FormState } from './types';
 
 function toSnakeCase(str: string): string {
   return str
@@ -23,6 +23,7 @@ export function deriveDefaults(form: FormState): FormState {
     const packageName = firstAuthor ? toSnakeCase(firstAuthor) : 'example';
     result.projectPackage = `com.${packageName}.${result.modId.replaceAll('-', '_')}`;
   }
+  if (!result.license.trim()) result.license = 'ARR';
   return result;
 }
 
@@ -34,10 +35,10 @@ const shouldUseOldForge = (mc: string) => {
   const minorNum = Number(minor);
   const patchNum = Number(patch);
   return minorNum < 20 || (minorNum === 20 && patchNum < 2);
-}
+};
 
 export function needsFabric(form: FormState): boolean {
-  return form.loader === 'fabric' || form.loader === 'multiloader'
+  return form.loader === 'fabric' || form.loader === 'multiloader';
 }
 
 function needForgeOrNeoforge(form: FormState): boolean {

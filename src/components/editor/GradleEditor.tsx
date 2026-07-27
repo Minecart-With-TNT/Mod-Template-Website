@@ -1,18 +1,18 @@
-import { onMount, createResource, For, Show, type Resource } from 'solid-js'
-import Card from '../Card'
-import { type FormState, type Loader, needsFabric, needsNeoForge, needsForge, getMinecraftVersions } from '../../core'
-import styles from './GradleEditor.module.css'
-import { Chip } from './Chip'
-import { Line } from './Line'
-import { ValuePicker } from './ValuePicker'
-import { setCurrentDoc, getForm, getDefaults, updateForm, fabricLoaderVersion, fabricApiVersion, neoforgeVersion, forgeVersion } from '../../store'
-import type { DocId } from '../../docs'
+import { onMount, createResource, For, Show, type Resource } from 'solid-js';
+import Card from '../Card';
+import { type FormState, type Loader, needsFabric, needsNeoForge, needsForge, getMinecraftVersions, getLicenses } from '../../core';
+import styles from './GradleEditor.module.css';
+import { Chip } from './Chip';
+import { Line } from './Line';
+import { ValuePicker } from './ValuePicker';
+import { setCurrentDoc, getForm, getDefaults, updateForm, fabricLoaderVersion, fabricApiVersion, neoforgeVersion, forgeVersion } from '../../store';
+import type { DocId } from '../../docs';
 
-const LOADERS: { id: Loader; label: string }[] = [
+const LOADERS: { id: Loader, label: string }[] = [
   { id: 'fabric',       label: 'Fabric'      },
   { id: 'neoforge',    label: 'NeoForge'    },
   { id: 'multiloader', label: 'Multiloader' },
-]
+];
 
 function ResourceValue(props: { resource: Resource<string | null> }) {
   return <>{
@@ -21,15 +21,15 @@ function ResourceValue(props: { resource: Resource<string | null> }) {
     : props.resource()
       ? <span class={styles.val}>{props.resource()!}</span>
       : <span class={styles.placeholder}>unavailable</span>
-  }</>
+  }</>;
 }
 
-type StringFormKey = Exclude<keyof FormState, 'loader'>
+type StringFormKey = Exclude<keyof FormState, 'loader'>;
 
 function EditValue(props: {
-  formKey: StringFormKey
-  docId: DocId
-  valueFixer?: (v: string) => string
+  formKey: StringFormKey,
+  docId: DocId,
+  valueFixer?: (v: string) => string,
 }) {
   return (
     <span class={styles.editCell}>
@@ -47,10 +47,10 @@ function EditValue(props: {
         spellcheck={false}
       />
     </span>
-  )
+  );
 }
 
-function LoaderValue(props: { value: Loader; onChange: (l: Loader) => void; onFocus?: () => void }) {
+function LoaderValue(props: { value: Loader, onChange: (l: Loader) => void, onFocus?: () => void }) {
   return (
     <span class={styles.chipGroup}>
       <For each={LOADERS}>
@@ -67,7 +67,7 @@ function LoaderValue(props: { value: Loader; onChange: (l: Loader) => void; onFo
         )}
       </For>
     </span>
-  )
+  );
 }
 
 function SubmitValue() {
@@ -75,97 +75,98 @@ function SubmitValue() {
     <Chip type="submit" active data-generate-btn>
       generate_template
     </Chip>
-  )
+  );
 }
 
 export default function GradleEditor(props: {
-  onSubmit?: () => void
+  onSubmit?: () => void,
 }) {
-  const [mcVersions] = createResource(getMinecraftVersions)
+  const [mcVersions] = createResource(getMinecraftVersions);
+  const [licenses] = createResource(getLicenses);
 
-  let formEl!: HTMLFormElement
+  let formEl!: HTMLFormElement;
 
   onMount(() => {
-    formEl.querySelector<HTMLInputElement>('input[type="text"]')?.focus()
-  })
+    formEl.querySelector<HTMLInputElement>('input[type="text"]')?.focus();
+  });
 
   function handleSubmit(e: SubmitEvent) {
-    e.preventDefault()
-    props.onSubmit?.()
+    e.preventDefault();
+    props.onSubmit?.();
   }
 
   function getNavItems(form: HTMLFormElement): HTMLElement[] {
     return Array.from(form.querySelectorAll<HTMLElement>(
       'input[type="text"], [data-loader-chip][data-active], [data-generate-btn]'
-    ))
+    ));
   }
 
   function focusEl(el: HTMLElement, atEnd: boolean) {
-    el.focus()
+    el.focus();
     if (el instanceof HTMLInputElement) {
-      const pos = atEnd ? el.value.length : 0
-      el.setSelectionRange(pos, pos)
+      const pos = atEnd ? el.value.length : 0;
+      el.setSelectionRange(pos, pos);
     }
   }
 
   function handleEditorKeyDown(e: KeyboardEvent) {
-    const target = e.target as HTMLElement
-    const isInput = target instanceof HTMLInputElement && target.type === 'text'
-    const isChip = 'loaderChip' in target.dataset
-    const isGenerate = 'generateBtn' in target.dataset
-    if (!isInput && !isChip && !isGenerate) return
+    const target = e.target as HTMLElement;
+    const isInput = target instanceof HTMLInputElement && target.type === 'text';
+    const isChip = 'loaderChip' in target.dataset;
+    const isGenerate = 'generateBtn' in target.dataset;
+    if (!isInput && !isChip && !isGenerate) return;
 
-    const form = e.currentTarget as HTMLFormElement
+    const form = e.currentTarget as HTMLFormElement;
 
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-      const goDown = e.key === 'ArrowDown'
-      const navItems = getNavItems(form)
+      const goDown = e.key === 'ArrowDown';
+      const navItems = getNavItems(form);
       const idx = isChip
         ? navItems.findIndex(el => 'loaderChip' in el.dataset)
-        : navItems.indexOf(target)
-      const next = navItems[idx + (goDown ? 1 : -1)]
-      if (next) { e.preventDefault(); focusEl(next, !goDown) }
+        : navItems.indexOf(target);
+      const next = navItems[idx + (goDown ? 1 : -1)];
+      if (next) { e.preventDefault(); focusEl(next, !goDown); }
     } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-      const goRight = e.key === 'ArrowRight'
+      const goRight = e.key === 'ArrowRight';
       if (isChip) {
-        const chips = Array.from(form.querySelectorAll<HTMLElement>('[data-loader-chip]'))
-        const next = chips[chips.indexOf(target) + (goRight ? 1 : -1)]
-        if (next) { e.preventDefault(); next.click(); next.focus() }
+        const chips = Array.from(form.querySelectorAll<HTMLElement>('[data-loader-chip]'));
+        const next = chips[chips.indexOf(target) + (goRight ? 1 : -1)];
+        if (next) { e.preventDefault(); next.click(); next.focus(); }
       } else if (isInput) {
-        const input = target as HTMLInputElement
-        const len = input.value.length
+        const input = target as HTMLInputElement;
+        const len = input.value.length;
         const atEdge = goRight
           ? input.selectionStart === len && input.selectionEnd === len
-          : input.selectionStart === 0 && input.selectionEnd === 0
+          : input.selectionStart === 0 && input.selectionEnd === 0;
         if (atEdge) {
-          const navItems = getNavItems(form)
-          const next = navItems[navItems.indexOf(input) + (goRight ? 1 : -1)]
-          if (next) { e.preventDefault(); focusEl(next, !goRight) }
+          const navItems = getNavItems(form);
+          const next = navItems[navItems.indexOf(input) + (goRight ? 1 : -1)];
+          if (next) { e.preventDefault(); focusEl(next, !goRight); }
         }
       }
     } else if (e.key === 'Enter') {
       if (isInput || isChip) {
-        e.preventDefault()
-        const navItems = getNavItems(form)
+        e.preventDefault();
+        const navItems = getNavItems(form);
         const idx = isChip
           ? navItems.findIndex(el => 'loaderChip' in el.dataset)
-          : navItems.indexOf(target)
-        const next = navItems[idx + 1]
-        if (next) focusEl(next, false)
+          : navItems.indexOf(target);
+        const next = navItems[idx + 1];
+        if (next) focusEl(next, false);
       }
       // isGenerate: let browser submit normally
     }
   }
 
   function handleEditorFocus(e: FocusEvent) {
-    const target = e.target as HTMLElement
-    if (!(target instanceof HTMLInputElement) || target.type !== 'text') return
-    const input = target
+    const target = e.target as HTMLElement;
+    if (!(target instanceof HTMLInputElement) || target.type !== 'text') return;
+    const input = target;
     requestAnimationFrame(() => {
       if (input.selectionStart === 0 && input.selectionEnd === input.value.length && input.value.length > 0) {
-        input.setSelectionRange(input.value.length, input.value.length)
+        input.setSelectionRange(input.value.length, input.value.length);
       }
-    })
+    });
   }
 
   return (
@@ -183,6 +184,15 @@ export default function GradleEditor(props: {
         <Line key="mod_version"><EditValue formKey="modVersion" docId="mod_version" /></Line>
         <Line key="mod_authors"><EditValue formKey="authors" docId="mod_authors" /></Line>
         <Line key="maven_group"><EditValue formKey="projectPackage" docId="maven_group" /></Line>
+        <Line key="license">
+          <ValuePicker
+            value={getForm().license}
+            setValue={v => updateForm('license', v)}
+            onFocus={() => setCurrentDoc('license')}
+            items={licenses}
+            placeholder="e.g. MIT"
+          />
+        </Line>
         <Line />
         <Line comment="Dependencies" />
         <Line key="minecraft_version">
@@ -191,11 +201,12 @@ export default function GradleEditor(props: {
             setValue={v => updateForm('mcVersion', v)}
             onFocus={() => setCurrentDoc('minecraft_version')}
             items={mcVersions}
+            flags={['Releases', 'Snapshots']}
             placeholder="e.g. 1.21.1"
           />
         </Line>
         <Line key="mod_loader">
-          <LoaderValue value={getForm().loader} onChange={l => { updateForm('loader', l); setCurrentDoc(`loader_${l}`) }} onFocus={() => setCurrentDoc(`loader_${getForm().loader}`)} />
+          <LoaderValue value={getForm().loader} onChange={l => { updateForm('loader', l); setCurrentDoc(`loader_${l}`); }} onFocus={() => setCurrentDoc(`loader_${getForm().loader}`)} />
         </Line>
         <Show when={needsFabric(getForm())}>
           <Line key="fabric_loader_version"><ResourceValue resource={fabricLoaderVersion} /></Line>
@@ -211,5 +222,5 @@ export default function GradleEditor(props: {
         <Line><SubmitValue /></Line>
       </form>
     </Card>
-  )
+  );
 }

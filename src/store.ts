@@ -1,11 +1,11 @@
-import { createStore } from 'solid-js/store'
-import type { DocId } from './docs'
-import { type FormState, deriveDefaults, needsFabric, needsNeoForge, needsForge, getFabricLoaderVerison, getFabricApiVersion, getNeoforgeVersion, getForgeVersion } from './core'
+import { createStore } from 'solid-js/store';
+import type { DocId } from './docs';
+import { type FormState, deriveDefaults, needsFabric, needsNeoForge, needsForge, getFabricLoaderVerison, getFabricApiVersion, getNeoforgeVersion, getForgeVersion } from './core';
 import { createMemo, createResource, createRoot } from 'solid-js';
 
 type State = {
-  activeDoc: DocId;
-  form: FormState;
+  activeDoc: DocId,
+  form: FormState,
 };
 
 const [store, setStore] = createStore<State>({
@@ -18,6 +18,7 @@ const [store, setStore] = createStore<State>({
     authors: '',
     loader: 'fabric',
     projectPackage: '',
+    license: '',
   },
 });
 
@@ -71,4 +72,3 @@ export const {
     forgeVersion,
   };
 });
-

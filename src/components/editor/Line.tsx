@@ -1,12 +1,12 @@
-import { type JSX, Show } from 'solid-js'
-import styles from './Line.module.css'
+import { type JSX, Show } from 'solid-js';
+import styles from './Line.module.css';
 
 export type LineProps = {
-  comment?: string
-  key?: string
-  class?: string
-  children?: JSX.Element
-}
+  comment?: string,
+  key?: string,
+  class?: string,
+  children?: JSX.Element,
+};
 
 export function Line(props: LineProps) {
   return (
@@ -20,5 +20,5 @@ export function Line(props: LineProps) {
       </Show>
       {props.children}
     </div>
-  )
+  );
 }

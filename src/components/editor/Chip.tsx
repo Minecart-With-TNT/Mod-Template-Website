@@ -1,15 +1,15 @@
-import { type JSX, splitProps } from 'solid-js'
-import styles from './Chip.module.css'
+import { type JSX, splitProps } from 'solid-js';
+import styles from './Chip.module.css';
 
 export type ChipProps = {
-  active?: boolean
-  type?: 'button' | 'submit'
-  children?: JSX.Element
-  class?: string
-} & Omit<JSX.ButtonHTMLAttributes<HTMLButtonElement>, 'type' | 'class' | 'children'>
+  active?: boolean,
+  type?: 'button' | 'submit',
+  children?: JSX.Element,
+  class?: string,
+} & Omit<JSX.ButtonHTMLAttributes<HTMLButtonElement>, 'type' | 'class' | 'children'>;
 
 export function Chip(props: ChipProps) {
-  const [local, rest] = splitProps(props, ['active', 'type', 'children', 'class'])
+  const [local, rest] = splitProps(props, ['active', 'type', 'children', 'class']);
 
   return (
     <button
@@ -23,5 +23,5 @@ export function Chip(props: ChipProps) {
     >
       {local.children}
     </button>
-  )
+  );
 }
