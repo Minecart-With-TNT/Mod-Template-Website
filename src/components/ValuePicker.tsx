@@ -4,8 +4,7 @@ import styles from './GradleEditor.module.css';
 
 const DEFAULT_FLAGS = ['Releases', 'Snapshots'];
 
-export function LinePicker(props: {
-  propKey: string;
+export function ValuePicker(props: {
   value: string;
   setValue: (v: string) => void;
   onFocus?: () => void;
@@ -138,60 +137,56 @@ export function LinePicker(props: {
   }
 
   return (
-    <div class={styles.line}>
-      <span class={styles.key}>{props.propKey}</span>
-      <span class={styles.eq}>=</span>
-      <span class={styles.editCell}>
-        <Show
-          when={!props.items.loading}
-          fallback={<span class={styles.placeholder}>loading...</span>}
-        >
-          <span class={styles.comboWrap}>
-            <input
-              ref={inputEl}
-              type="text"
-              class={styles.inlineInput}
-              value={props.value}
-              placeholder={props.placeholder}
-              autocomplete="off"
-              spellcheck={false}
-              on:mousedown={onMouseDown}
-              on:focus={onFocus}
-              on:input={onInput}
-              on:keydown={onKeyDown}
-            />
-            <Show when={open()}>
-              <div ref={wrapperEl} class={styles.dropdownWrap}>
-                <ul ref={listEl} class={styles.dropdown}>
-                  <For each={options()}>
-                    {(item, i) => (
-                      <li
-                        classList={{
-                          [styles.activeOption]:      props.value === item.value,
-                          [styles.highlightedOption]: i() === cursor(),
-                        }}
-                        onmousedown={e => { e.preventDefault(); }}
-                        onclick={() => { choose(item.value); }}
-                      >{item.value}</li>
-                    )}
-                  </For>
-                </ul>
-                <div
-                  class={styles.dropdownFooter}
-                  onmousedown={e => { e.preventDefault(); }}
-                  onclick={() => {
-                    setFlagIndex(i => (i + 1) % flagsArr().length);
-                    setTimeout(() => inputEl?.focus());
-                  }}
-                >
-                  <span>{flagsArr()[flagIndex()]}</span>
-                  <kbd class={styles.kbd}>Ctrl+Space</kbd>
-                </div>
+    <span class={styles.editCell}>
+      <Show
+        when={!props.items.loading}
+        fallback={<span class={styles.placeholder}>loading...</span>}
+      >
+        <span class={styles.comboWrap}>
+          <input
+            ref={inputEl}
+            type="text"
+            class={styles.inlineInput}
+            value={props.value}
+            placeholder={props.placeholder}
+            autocomplete="off"
+            spellcheck={false}
+            on:mousedown={onMouseDown}
+            on:focus={onFocus}
+            on:input={onInput}
+            on:keydown={onKeyDown}
+          />
+          <Show when={open()}>
+            <div ref={wrapperEl} class={styles.dropdownWrap}>
+              <ul ref={listEl} class={styles.dropdown}>
+                <For each={options()}>
+                  {(item, i) => (
+                    <li
+                      classList={{
+                        [styles.activeOption]:      props.value === item.value,
+                        [styles.highlightedOption]: i() === cursor(),
+                      }}
+                      onmousedown={e => { e.preventDefault(); }}
+                      onclick={() => { choose(item.value); }}
+                    >{item.value}</li>
+                  )}
+                </For>
+              </ul>
+              <div
+                class={styles.dropdownFooter}
+                onmousedown={e => { e.preventDefault(); }}
+                onclick={() => {
+                  setFlagIndex(i => (i + 1) % flagsArr().length);
+                  setTimeout(() => inputEl?.focus());
+                }}
+              >
+                <span>{flagsArr()[flagIndex()]}</span>
+                <kbd class={styles.kbd}>Ctrl+Space</kbd>
               </div>
-            </Show>
-          </span>
-        </Show>
-      </span>
-    </div>
+            </div>
+          </Show>
+        </span>
+      </Show>
+    </span>
   );
 }

@@ -2,7 +2,8 @@ import { onMount, createResource, For, Show, type Resource } from 'solid-js'
 import Card from './Card'
 import { type FormState, type Loader, needsFabric, needsNeoForge, needsForge, getMinecraftVersions } from '../core'
 import styles from './GradleEditor.module.css'
-import { LinePicker } from './LinePicker'
+import { Line } from './Line'
+import { ValuePicker } from './ValuePicker'
 import { setCurrentDoc, getForm, getDefaults, updateForm, fabricLoaderVersion, fabricApiVersion, neoforgeVersion, forgeVersion } from '../store'
 import type { DocId } from '../docs'
 
@@ -12,115 +13,73 @@ const LOADERS: { id: Loader; label: string }[] = [
   { id: 'multiloader', label: 'Multiloader' },
 ]
 
-// ── Line primitives ─────────────────────────────────────────────────────
-
-function CommentLine(props: { text: string }) {
-  return (
-    <div class={styles.line}>
-      <span class={styles.comment}># {props.text}</span>
-    </div>
-  )
-}
-
-function EmptyLine() {
-  return <div class={styles.line} />
-}
-
-function ResourceLine(props: { propKey: string; resource: Resource<string | null> }) {
-  return (
-    <div class={styles.line}>
-      <span class={styles.key}>{props.propKey}</span>
-      <span class={styles.eq}>=</span>
-      {props.resource.loading
-        ? <span class={styles.placeholder}>loading...</span>
-        : props.resource()
-          ? <span class={styles.val}>{props.resource()!}</span>
-          : <span class={styles.placeholder}>unavailable</span>
-      }
-    </div>
-  )
+function ResourceValue(props: { resource: Resource<string | null> }) {
+  return <>{
+    props.resource.loading
+    ? <span class={styles.placeholder}>loading...</span>
+    : props.resource()
+      ? <span class={styles.val}>{props.resource()!}</span>
+      : <span class={styles.placeholder}>unavailable</span>
+  }</>
 }
 
 type StringFormKey = Exclude<keyof FormState, 'loader'>
 
-// ── Editable field line ─────────────────────────────────────────────────
-
-function EditLine(props: {
-  propKey: string
+function EditValue(props: {
   formKey: StringFormKey
   docId: DocId
   valueFixer?: (v: string) => string
-  comment?: string
 }) {
   return (
-    <div class={styles.line}>
-      <span class={styles.key}>{props.propKey}</span>
-      <span class={styles.eq}>=</span>
-      <span class={styles.editCell}>
-        <input
-          type="text"
-          class={styles.inlineInput}
-          value={getForm()[props.formKey]}
-          placeholder={getDefaults()[props.formKey]}
-          onInput={e => {
-            const v = e.currentTarget.value;
-            updateForm(props.formKey, props.valueFixer ? props.valueFixer(v) : v);
-          }}
-          onFocus={() => setCurrentDoc(props.docId)}
-          autocomplete="off"
-          spellcheck={false}
-        />
-        {props.comment && (
-          <span class={`${styles.comment} ${styles.inlineComment}`}># {props.comment}</span>
+    <span class={styles.editCell}>
+      <input
+        type="text"
+        class={styles.inlineInput}
+        value={getForm()[props.formKey]}
+        placeholder={getDefaults()[props.formKey]}
+        onInput={e => {
+          const v = e.currentTarget.value;
+          updateForm(props.formKey, props.valueFixer ? props.valueFixer(v) : v);
+        }}
+        onFocus={() => setCurrentDoc(props.docId)}
+        autocomplete="off"
+        spellcheck={false}
+      />
+    </span>
+  )
+}
+
+function LoaderValue(props: { value: Loader; onChange: (l: Loader) => void; onFocus?: () => void }) {
+  return (
+    <span class={styles.chipGroup}>
+      <For each={LOADERS}>
+        {l => (
+          <button
+            type="button"
+            data-loader-chip
+            data-active={props.value === l.id ? '' : undefined}
+            classList={{
+              [styles.loaderChip]: true,
+              [styles.loaderChipActive]: props.value === l.id,
+            }}
+            onClick={() => props.onChange(l.id)}
+            onFocus={props.onFocus}
+          >
+            {l.label}
+          </button>
         )}
-      </span>
-    </div>
+      </For>
+    </span>
   )
 }
 
-// ── Loader picker ───────────────────────────────────────────────────────
-
-function LoaderLine(props: { value: Loader; onChange: (l: Loader) => void; onFocus?: () => void }) {
+function SubmitValue() {
   return (
-    <div class={`${styles.line} ${styles.loaderLine}`}>
-      <span class={styles.key}>mod_loader</span>
-      <span class={styles.eq}>=</span>
-      <span class={styles.chipGroup}>
-        <For each={LOADERS}>
-          {l => (
-            <button
-              type="button"
-              data-loader-chip
-              data-active={props.value === l.id ? '' : undefined}
-              classList={{
-                [styles.loaderChip]: true,
-                [styles.loaderChipActive]: props.value === l.id,
-              }}
-              onClick={() => props.onChange(l.id)}
-              onFocus={props.onFocus}
-            >
-              {l.label}
-            </button>
-          )}
-        </For>
-      </span>
-    </div>
+    <button type="submit" class={styles.generateChip} data-generate-btn>
+      generate_template
+    </button>
   )
 }
-
-// ── Submit line ─────────────────────────────────────────────────────────
-
-function SubmitLine() {
-  return (
-    <div class={styles.line}>
-      <button type="submit" class={styles.generateChip} data-generate-btn>
-        generate_template
-      </button>
-    </div>
-  )
-}
-
-// ── Main export ─────────────────────────────────────────────────────────
 
 export default function GradleEditor(props: {
   onSubmit?: () => void
@@ -212,16 +171,6 @@ export default function GradleEditor(props: {
     })
   }
 
-  function handleBodyMouseDown(_e: MouseEvent) {
-    // TODO fix
-    // const target = e.target as HTMLElement
-    // if (target.closest('input, button, label, select, textarea')) return
-    // e.preventDefault()
-    // if (!formEl.contains(document.activeElement)) {
-    //   formEl.querySelector<HTMLElement>('input[type="text"]')?.focus()
-    // }
-  }
-
   return (
     <Card title="gradle.properties">
       <form
@@ -230,37 +179,39 @@ export default function GradleEditor(props: {
         onSubmit={handleSubmit}
         onKeyDown={handleEditorKeyDown}
         onFocus={handleEditorFocus}
-        onMouseDown={handleBodyMouseDown}
       >
-        <CommentLine text="Mod Properties" />
-        <EditLine propKey="mod_name"    formKey="modName"        docId="mod_name" />
-        <EditLine propKey="mod_id"      formKey="modId"          docId="mod_id"   valueFixer={v => v.toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 64)} />
-        <EditLine propKey="mod_version" formKey="modVersion"     docId="mod_version" />
-        <EditLine propKey="mod_authors" formKey="authors"        docId="mod_authors" />
-        <EditLine propKey="maven_group" formKey="projectPackage" docId="maven_group" />
-        <EmptyLine />
-        <CommentLine text="Dependencies" />
-        <LinePicker
-          propKey="minecraft_version"
-          value={getForm().mcVersion}
-          setValue={v => updateForm('mcVersion', v)}
-          onFocus={() => setCurrentDoc('minecraft_version')}
-          items={mcVersions}
-          placeholder="e.g. 1.21.1"
-        />
-        <LoaderLine value={getForm().loader} onChange={l => { updateForm('loader', l); setCurrentDoc(`loader_${l}`) }} onFocus={() => setCurrentDoc(`loader_${getForm().loader}`)} />
+        <Line comment="Mod Properties" />
+        <Line key="mod_name"><EditValue formKey="modName" docId="mod_name" /></Line>
+        <Line key="mod_id"><EditValue formKey="modId" docId="mod_id" valueFixer={v => v.toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 64)} /></Line>
+        <Line key="mod_version"><EditValue formKey="modVersion" docId="mod_version" /></Line>
+        <Line key="mod_authors"><EditValue formKey="authors" docId="mod_authors" /></Line>
+        <Line key="maven_group"><EditValue formKey="projectPackage" docId="maven_group" /></Line>
+        <Line />
+        <Line comment="Dependencies" />
+        <Line key="minecraft_version">
+          <ValuePicker
+            value={getForm().mcVersion}
+            setValue={v => updateForm('mcVersion', v)}
+            onFocus={() => setCurrentDoc('minecraft_version')}
+            items={mcVersions}
+            placeholder="e.g. 1.21.1"
+          />
+        </Line>
+        <Line key="mod_loader">
+          <LoaderValue value={getForm().loader} onChange={l => { updateForm('loader', l); setCurrentDoc(`loader_${l}`) }} onFocus={() => setCurrentDoc(`loader_${getForm().loader}`)} />
+        </Line>
         <Show when={needsFabric(getForm())}>
-          <ResourceLine propKey="fabric_loader_version" resource={fabricLoaderVersion} />
-          <ResourceLine propKey="fabric_api_version"    resource={fabricApiVersion} />
+          <Line key="fabric_loader_version"><ResourceValue resource={fabricLoaderVersion} /></Line>
+          <Line key="fabric_api_version"><ResourceValue resource={fabricApiVersion} /></Line>
         </Show>
         <Show when={needsNeoForge(getForm())}>
-          <ResourceLine propKey="neoforge_version" resource={neoforgeVersion} />
+          <Line key="neoforge_version"><ResourceValue resource={neoforgeVersion} /></Line>
         </Show>
         <Show when={needsForge(getForm())}>
-          <ResourceLine propKey="forge_version" resource={forgeVersion} />
+          <Line key="forge_version"><ResourceValue resource={forgeVersion} /></Line>
         </Show>
-        <EmptyLine />
-        <SubmitLine />
+        <Line />
+        <Line><SubmitValue /></Line>
       </form>
     </Card>
   )

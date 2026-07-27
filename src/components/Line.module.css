@@ -1,0 +1,43 @@
+.line {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  line-height: 28px;
+  min-height: 28px;
+  counter-increment: line-number;
+  padding-right: 16px;
+  padding-left: 32px;
+  position: relative;
+
+  &::before {
+    position: absolute;
+    left: 0;
+    display: inline-block;
+    content: counter(line-number);
+    width: 24px;
+    text-align: right;
+    color: var(--border);
+    user-select: none;
+    line-height: 28px;
+  }
+}
+
+.comment {
+  color: var(--prop-comment);
+}
+
+.key {
+  color: var(--prop-key);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.eq {
+  color: var(--prop-comment);
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.line:has([data-generate-btn]:focus-visible) {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
