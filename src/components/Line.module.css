@@ -38,6 +38,6 @@
   flex-shrink: 0;
 }
 
-.line:has([data-generate-btn]:focus-visible) {
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
+.line:focus-within {
+  background: color-mix(in srgb, var(--accent) 4%, transparent);
 }

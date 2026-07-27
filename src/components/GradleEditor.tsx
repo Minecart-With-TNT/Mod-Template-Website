@@ -2,6 +2,7 @@ import { onMount, createResource, For, Show, type Resource } from 'solid-js'
 import Card from './Card'
 import { type FormState, type Loader, needsFabric, needsNeoForge, needsForge, getMinecraftVersions } from '../core'
 import styles from './GradleEditor.module.css'
+import { Chip } from './Chip'
 import { Line } from './Line'
 import { ValuePicker } from './ValuePicker'
 import { setCurrentDoc, getForm, getDefaults, updateForm, fabricLoaderVersion, fabricApiVersion, neoforgeVersion, forgeVersion } from '../store'
@@ -54,19 +55,15 @@ function LoaderValue(props: { value: Loader; onChange: (l: Loader) => void; onFo
     <span class={styles.chipGroup}>
       <For each={LOADERS}>
         {l => (
-          <button
-            type="button"
+          <Chip
             data-loader-chip
             data-active={props.value === l.id ? '' : undefined}
-            classList={{
-              [styles.loaderChip]: true,
-              [styles.loaderChipActive]: props.value === l.id,
-            }}
+            active={props.value === l.id}
             onClick={() => props.onChange(l.id)}
             onFocus={props.onFocus}
           >
             {l.label}
-          </button>
+          </Chip>
         )}
       </For>
     </span>
@@ -75,9 +72,9 @@ function LoaderValue(props: { value: Loader; onChange: (l: Loader) => void; onFo
 
 function SubmitValue() {
   return (
-    <button type="submit" class={styles.generateChip} data-generate-btn>
+    <Chip type="submit" active data-generate-btn>
       generate_template
-    </button>
+    </Chip>
   )
 }
 
