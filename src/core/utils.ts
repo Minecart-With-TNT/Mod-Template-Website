@@ -23,7 +23,8 @@ export function deriveDefaults(form: FormState): FormState {
     const packageName = firstAuthor ? toSnakeCase(firstAuthor) : 'example';
     result.projectPackage = `com.${packageName}.${result.modId.replaceAll('-', '_')}`;
   }
-  if (!result.license.trim()) result.license = 'ARR';
+  if (!result.mcVersion.trim()) result.mcVersion = '26.2'; // TODO automatically detect latest MC version
+  if (!result.license.trim()) result.license = '';
   return result;
 }
 

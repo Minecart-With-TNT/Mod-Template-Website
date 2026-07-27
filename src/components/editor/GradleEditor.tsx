@@ -190,7 +190,7 @@ export default function GradleEditor(props: {
             setValue={v => updateForm('license', v)}
             onFocus={() => setCurrentDoc('license')}
             items={licenses}
-            placeholder="e.g. MIT"
+            placeholder="none"
           />
         </Line>
         <Line />
@@ -202,20 +202,20 @@ export default function GradleEditor(props: {
             onFocus={() => setCurrentDoc('minecraft_version')}
             items={mcVersions}
             flags={['Releases', 'Snapshots']}
-            placeholder="e.g. 1.21.1"
+            placeholder={getDefaults().mcVersion}
           />
         </Line>
         <Line key="mod_loader">
           <LoaderValue value={getForm().loader} onChange={l => { updateForm('loader', l); setCurrentDoc(`loader_${l}`); }} onFocus={() => setCurrentDoc(`loader_${getForm().loader}`)} />
         </Line>
-        <Show when={needsFabric(getForm())}>
+        <Show when={needsFabric(getDefaults())}>
           <Line key="fabric_loader_version"><ResourceValue resource={fabricLoaderVersion} /></Line>
           <Line key="fabric_api_version"><ResourceValue resource={fabricApiVersion} /></Line>
         </Show>
-        <Show when={needsNeoForge(getForm())}>
+        <Show when={needsNeoForge(getDefaults())}>
           <Line key="neoforge_version"><ResourceValue resource={neoforgeVersion} /></Line>
         </Show>
-        <Show when={needsForge(getForm())}>
+        <Show when={needsForge(getDefaults())}>
           <Line key="forge_version"><ResourceValue resource={forgeVersion} /></Line>
         </Show>
         <Line />

@@ -48,19 +48,19 @@ export const {
   const getDefaults = createMemo(() => deriveDefaults(store.form));
 
   const [fabricLoaderVersion] = createResource(
-    () => (needsFabric(getForm()) && getForm().mcVersion) || undefined,
+    () => (needsFabric(getDefaults()) && getDefaults().mcVersion) || undefined,
     getFabricLoaderVerison,
   );
   const [fabricApiVersion] = createResource(
-    () => (needsFabric(getForm()) && getForm().mcVersion) || undefined,
+    () => (needsFabric(getDefaults()) && getDefaults().mcVersion) || undefined,
     getFabricApiVersion,
   );
   const [neoforgeVersion] = createResource(
-    () => needsNeoForge(getForm()) ? getForm().mcVersion : undefined,
+    () => needsNeoForge(getDefaults()) ? getDefaults().mcVersion : undefined,
     getNeoforgeVersion,
   );
   const [forgeVersion] = createResource(
-    () => needsForge(getForm()) ? getForm().mcVersion : undefined,
+    () => needsForge(getDefaults()) ? getDefaults().mcVersion : undefined,
     getForgeVersion,
   );
 
