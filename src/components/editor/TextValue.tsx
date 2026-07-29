@@ -1,8 +1,8 @@
-import { createSignal, createEffect, onMount, onCleanup, untrack, For, Show, type Resource, type JSX } from 'solid-js';
+import { createSignal, createEffect, createResource, onMount, onCleanup, untrack, For, Show, type JSX } from 'solid-js';
 import { Portal } from 'solid-js/web';
 import type { McVersion } from '../../core';
 import common from './common.module.css';
-import styles from './ValuePicker.module.css';
+import styles from './TextValue.module.css';
 
 const DROPDOWN_GAP = 4;
 const DROPDOWN_MAX = 300;
@@ -19,16 +19,20 @@ function viewportBounds() {
   return { top: 0, bottom: window.innerHeight };
 }
 
-export function ValuePicker(props: {
+export function TextValue(props: {
   value: string,
   setValue: (v: string) => void,
   onFocus?: () => void,
-  items: Resource<McVersion[]>,
+  /** When omitted, behaves as a plain text input (no dropdown / Ctrl+Space). */
+  options?: Promise<McVersion[]>,
   flags?: string[],
   placeholder?: string,
 }) {
+  const hasOptions = () => props.options !== undefined;
+  const [items] = createResource(() => props.options, p => p ?? []);
+
   const flagsArr = () => props.flags;
-  const hasFlagFilter = () => (flagsArr()?.length ?? 0) > 0;
+  const hasFlagFilter = () => hasOptions() && (flagsArr()?.length ?? 0) > 0;
 
   const [open, setOpen]           = createSignal(false);
   const [flagIndex, setFlagIndex] = createSignal(0);
@@ -57,7 +61,6 @@ export function ValuePicker(props: {
     const spaceBelow = vp.bottom - rect.bottom - DROPDOWN_GAP - VIEWPORT_PAD;
     const spaceAbove = rect.top - vp.top - DROPDOWN_GAP - VIEWPORT_PAD;
 
-    // Prefer the side that can fit the ideal height; otherwise the roomier side.
     const placeBelow =
       spaceBelow >= DROPDOWN_MAX ? true :
       spaceAbove >= DROPDOWN_MAX ? false :
@@ -85,7 +88,6 @@ export function ValuePicker(props: {
   createEffect(() => {
     if (!open()) return;
     updatePosition();
-    // Remeasure after paint once the portal content has real height.
     const raf = requestAnimationFrame(() => updatePosition());
     const onReposition = () => updatePosition();
     window.addEventListener('resize', onReposition);
@@ -102,8 +104,9 @@ export function ValuePicker(props: {
   });
 
   const options = () => {
+    if (!hasOptions()) return [];
     const q   = props.value.toLowerCase().trim();
-    const all = props.items() ?? [];
+    const all = items() ?? [];
     const flags = flagsArr();
     const visible = flags?.length
       ? all.filter(item => (item.flags & (1 << flagIndex())) !== 0)
@@ -135,6 +138,7 @@ export function ValuePicker(props: {
   });
 
   function openDropdown() {
+    if (!hasOptions()) return;
     updatePosition();
     setOpen(true);
   }
@@ -145,13 +149,14 @@ export function ValuePicker(props: {
   }
 
   function onMouseDown() {
+    if (!hasOptions()) return;
     openOnFocus  = true;
     suppressOpen = false;
   }
 
   function onFocus() {
     props.onFocus?.();
-    if (openOnFocus) {
+    if (hasOptions() && openOnFocus) {
       openOnFocus = false;
       openDropdown();
     }
@@ -159,10 +164,12 @@ export function ValuePicker(props: {
 
   function onInput(e: Event) {
     props.setValue((e.target as HTMLInputElement).value);
-    if (!suppressOpen) openDropdown();
+    if (hasOptions() && !suppressOpen) openDropdown();
   }
 
   function onKeyDown(e: KeyboardEvent) {
+    if (!hasOptions()) return;
+
     if (e.ctrlKey && e.code === 'Space') {
       e.preventDefault();
       e.stopPropagation();
@@ -189,10 +196,13 @@ export function ValuePicker(props: {
       return;
     }
 
+    const list = options();
+    if (list.length === 0) return;
+
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       e.stopPropagation();
-      setCursor(i => Math.min(i + 1, options().length - 1));
+      setCursor(i => Math.min(i + 1, list.length - 1));
       return;
     }
 
@@ -206,7 +216,7 @@ export function ValuePicker(props: {
     if (e.key === 'Enter') {
       e.preventDefault();
       e.stopPropagation();
-      const item = options()[cursor()];
+      const item = list[cursor()];
       if (item) choose(item.value);
       return;
     }
@@ -215,7 +225,7 @@ export function ValuePicker(props: {
   return (
     <span class={common.editCell}>
       <Show
-        when={!props.items.loading}
+        when={!hasOptions() || !items.loading}
         fallback={<span class={common.placeholder}>loading...</span>}
       >
         <span class={styles.comboWrap}>
@@ -232,7 +242,7 @@ export function ValuePicker(props: {
             on:input={onInput}
             on:keydown={onKeyDown}
           />
-          <Show when={open()}>
+          <Show when={hasOptions() && open()}>
             <Portal>
               <div ref={wrapperEl} class={styles.dropdownWrap} style={dropdownStyle()}>
                 <ul ref={listEl} class={styles.dropdown}>

@@ -2,7 +2,7 @@ import { For } from 'solid-js';
 import { Chip, type ChipKind } from './Chip';
 import styles from './ChipSelection.module.css';
 
-export type ChipOption<T extends string = string> = {
+type ChipOption<T extends string = string> = {
   id: T,
   label: string,
   /** Kind used when this option is selected. Defaults to `accent`. */

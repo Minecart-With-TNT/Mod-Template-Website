@@ -1,14 +1,12 @@
 import { type JSX, Show } from 'solid-js';
 import styles from './Line.module.css';
 
-export type LineProps = {
+export function Line(props: {
   comment?: string,
   key?: string,
   class?: string,
   children?: JSX.Element,
-};
-
-export function Line(props: LineProps) {
+}) {
   return (
     <div class={`${styles.line}${props.class ? ` ${props.class}` : ''}`}>
       <Show when={props.comment}>

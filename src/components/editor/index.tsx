@@ -1,29 +1,89 @@
-import { onMount, createResource, Show } from 'solid-js';
+import { onMount, createMemo, Index, Show, Switch, Match } from 'solid-js';
 import Card from '../Card';
-import { type Loader, needsFabric, needsNeoForge, needsForge, getMinecraftVersions, getLicenses } from '../../core';
+import {
+  type Line as FormLine,
+  type Loader,
+  getFormLines,
+} from '../../core';
+import type { DocId } from '../../docs';
 import styles from './common.module.css';
 import { Line } from './Line';
-import { ValuePicker } from './ValuePicker';
-import { EditValue } from './EditValue';
-import { ChipSelection, type ChipOption } from './ChipSelection';
+import { TextValue } from './TextValue';
+import { ChipSelection } from './ChipSelection';
 import { BoolValue } from './BoolValue';
-import { ResourceValue } from './ResourceValue';
+import { PromiseValue } from './PromiseValue';
 import { SubmitValue } from './SubmitValue';
-import { setCurrentDoc, getForm, getDefaults, updateForm, fabricLoaderVersion, fabricApiVersion, neoforgeVersion, forgeVersion } from '../../store';
+import { setCurrentDoc, getForm, updateForm } from '../../store';
 
-const LOADERS: ChipOption<Loader>[] = [
-  { id: 'fabric',       label: 'Fabric'      },
-  { id: 'neoforge',    label: 'NeoForge'    },
-  { id: 'multiloader', label: 'Multiloader' },
-];
+function FormLineView(props: { line: FormLine, index: number }) {
+  return (
+    <>
+      <Show when={props.index > 0 && props.line.type === 'section-header'}>
+        {/* Empty line between sections */}
+        <Line />
+      </Show>
+      <Switch>
+        <Match when={props.line.type === 'section-header' ? props.line : false}>
+          {line => <Line comment={line().name} />}
+        </Match>
+        <Match when={props.line.type === 'text' ? props.line : false}>
+          {line => (
+            <Line key={line().key}>
+              <TextValue
+                value={line().value}
+                setValue={v => line().setValue(v)}
+                onFocus={() => setCurrentDoc(line().key as DocId)}
+                options={line().options}
+                flags={line().flagNames}
+                placeholder={line().placeholder}
+              />
+            </Line>
+          )}
+        </Match>
+        <Match when={props.line.type === 'select' ? props.line : false}>
+          {line => (
+            <Line key={line().key}>
+              <ChipSelection
+                value={line().value as Loader}
+                options={line().options}
+                onChange={l => {
+                  line().setValue(l);
+                  setCurrentDoc(`${line().key}_${l}` as DocId);
+                }}
+                onFocus={() => setCurrentDoc(`${line().key}_${line().value}` as DocId)}
+              />
+            </Line>
+          )}
+        </Match>
+        <Match when={props.line.type === 'value' ? props.line : false}>
+          {line => (
+            <Line key={line().key}>
+              <PromiseValue value={line().value} />
+            </Line>
+          )}
+        </Match>
+        <Match when={props.line.type === 'bool' ? props.line : false}>
+          {line => (
+            <Line key={line().key}>
+              <BoolValue
+                value={line().value}
+                onChange={v => line().setValue(v)}
+                onFocus={() => setCurrentDoc(line().key as DocId)}
+              />
+            </Line>
+          )}
+        </Match>
+      </Switch>
+    </>
+  );
+}
 
 export default function GradleEditor(props: {
   onSubmit?: () => void,
 }) {
-  const [mcVersions] = createResource(getMinecraftVersions);
-  const [licenses] = createResource(getLicenses);
-
   let formEl!: HTMLFormElement;
+
+  const lines = createMemo(() => getFormLines(getForm(), updateForm));
 
   onMount(() => {
     formEl.querySelector<HTMLInputElement>('input[type="text"]')?.focus();
@@ -123,67 +183,9 @@ export default function GradleEditor(props: {
         onKeyDown={handleEditorKeyDown}
         onFocus={handleEditorFocus}
       >
-        <Line comment="Mod Properties" />
-        <Line key="mod_name"><EditValue formKey="modName" docId="mod_name" /></Line>
-        <Line key="mod_id"><EditValue formKey="modId" docId="mod_id" valueFixer={v => v.toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 64)} /></Line>
-        <Line key="mod_version"><EditValue formKey="modVersion" docId="mod_version" /></Line>
-        <Line key="mod_authors"><EditValue formKey="authors" docId="mod_authors" /></Line>
-        <Line key="maven_group"><EditValue formKey="projectPackage" docId="maven_group" /></Line>
-        <Line key="license">
-          <ValuePicker
-            value={getForm().license}
-            setValue={v => updateForm('license', v)}
-            onFocus={() => setCurrentDoc('license')}
-            items={licenses}
-            placeholder="none"
-          />
-        </Line>
-        <Line />
-        <Line comment="Dependencies" />
-        <Line key="minecraft_version">
-          <ValuePicker
-            value={getForm().mcVersion}
-            setValue={v => updateForm('mcVersion', v)}
-            onFocus={() => setCurrentDoc('minecraft_version')}
-            items={mcVersions}
-            flags={['Releases', 'Snapshots']}
-            placeholder={getDefaults().mcVersion}
-          />
-        </Line>
-        <Line key="mod_loader">
-          <ChipSelection
-            value={getForm().loader}
-            options={LOADERS}
-            onChange={l => { updateForm('loader', l); setCurrentDoc(`loader_${l}`); }}
-            onFocus={() => setCurrentDoc(`loader_${getForm().loader}`)}
-          />
-        </Line>
-        <Show when={needsFabric(getDefaults())}>
-          <Line key="fabric_loader_version"><ResourceValue resource={fabricLoaderVersion} /></Line>
-          <Line key="fabric_api_version"><ResourceValue resource={fabricApiVersion} /></Line>
-        </Show>
-        <Show when={needsNeoForge(getDefaults())}>
-          <Line key="neoforge_version"><ResourceValue resource={neoforgeVersion} /></Line>
-        </Show>
-        <Show when={needsForge(getDefaults())}>
-          <Line key="forge_version"><ResourceValue resource={forgeVersion} /></Line>
-        </Show>
-        <Line />
-        <Line comment="Template Options" />
-        <Line key="separate_client">
-          <BoolValue
-            value={getForm().separateClient}
-            onChange={v => updateForm('separateClient', v)}
-            onFocus={() => setCurrentDoc('separate_client')}
-          />
-        </Line>
-        <Line key="use_mixin">
-          <BoolValue
-            value={getForm().useMixin}
-            onChange={v => updateForm('useMixin', v)}
-            onFocus={() => setCurrentDoc('use_mixin')}
-          />
-        </Line>
+        <Index each={lines()}>
+          {(line, i) => <FormLineView line={line()} index={i} />}
+        </Index>
         <Line />
         <Line><SubmitValue /></Line>
       </form>

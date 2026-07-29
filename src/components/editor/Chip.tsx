@@ -3,7 +3,7 @@ import styles from './Chip.module.css';
 
 export type ChipKind = 'true' | 'false' | 'dull' | 'accent';
 
-export type ChipProps = {
+type ChipProps = {
   kind: ChipKind,
   type?: 'button' | 'submit',
   children?: JSX.Element,
